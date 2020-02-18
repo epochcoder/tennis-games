@@ -20,9 +20,11 @@ public class Match {
     private Team team1;
     private Team team2;
 
-    public boolean hasAnyPlayersFromMatch(final Match otherMatch) {
-        return (this.hasPlayer(otherMatch.getTeam1().getPlayer1()) || this.hasPlayer(otherMatch.getTeam1().getPlayer2()))
-                || (this.hasPlayer(otherMatch.getTeam2().getPlayer1()) || this.hasPlayer(otherMatch.getTeam2().getPlayer2()));
+    public boolean hasAnyPlayersFromMatchButNotPlayer(final Match otherMatch, final Player player) {
+        final Set<Player> matchPlayers = otherMatch.getPlayers();
+        matchPlayers.removeIf(player::equals);
+
+        return matchPlayers.stream().anyMatch(this::hasPlayer);
     }
 
     public boolean hasTeam(final Team team) {
@@ -34,28 +36,37 @@ public class Match {
         return this.getTeam1().hasPlayer(player) || this.getTeam2().hasPlayer(player);
     }
 
+    public Set<Player> getPlayers() {
+        final Set<Player> players = new HashSet<>();
+        players.addAll(this.getTeam1().getPlayers());
+        players.addAll(this.getTeam2().getPlayers());
+        return players;
+    }
+
     public boolean isMirroredMatch(final Match match) {
         return this.hasTeam(match.getTeam1()) && this.hasTeam(match.getTeam2());
     }
 
     public static Optional<Match> findMatchForPlayer(final Player player, final Set<Match> all, final Set<Match> used) {
-        while (!all.isEmpty()) {
-            // remove all used matched
-            all.removeIf(used::contains);
+        // remove all used matched
+        all.removeIf(used::contains);
 
+        while (!all.isEmpty()) {
             // try to find one from set
             final Optional<Match> matchWithPlayer = all.stream()
                     .filter(match -> match.hasPlayer(player))
                     .findAny();
 
             if (matchWithPlayer.isEmpty()) {
+                System.err.println("EMPTY : no players found, remaining matches: " + all.size());
                 // no match possible
                 return Optional.empty();
             }
 
             final Match possibleMatch = matchWithPlayer.get();
-            if (used.contains(possibleMatch) || used.stream().anyMatch(usedMatch ->
-                    usedMatch.isMirroredMatch(possibleMatch) || usedMatch.hasAnyPlayersFromMatch(possibleMatch))) {
+            if (used.contains(possibleMatch) || used.stream()
+                    .anyMatch(usedMatch -> usedMatch.isMirroredMatch(possibleMatch)
+                            || usedMatch.hasAnyPlayersFromMatchButNotPlayer(possibleMatch, player))) {
                 // match has been played before or has players that already played, reduce set
                 all.removeIf(match -> match.equals(possibleMatch));
                 continue;
@@ -67,6 +78,7 @@ public class Match {
         }
 
         // no match possible
+        System.err.println("EMPTY : loop");
         return Optional.empty();
     }
 

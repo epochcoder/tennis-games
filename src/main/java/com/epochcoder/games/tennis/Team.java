@@ -14,6 +14,10 @@ class Team {
     private Player player1;
     private Player player2;
 
+    public Set<Player> getPlayers() {
+        return Set.of(this.player1, this.player2);
+    }
+
     public boolean hasPlayer(final Player player) {
         return this.player1.equals(player) || this.player2.equals(player);
     }
