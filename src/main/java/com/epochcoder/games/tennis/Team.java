@@ -1,18 +1,20 @@
 package com.epochcoder.games.tennis;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
-@Data
-@AllArgsConstructor
+@Getter
+@EqualsAndHashCode
+@RequiredArgsConstructor
 class Team {
 
-    private Player player1;
-    private Player player2;
+    private final Player player1;
+    private final Player player2;
 
     public Set<Player> getPlayers() {
         return Set.of(this.player1, this.player2);
@@ -55,5 +57,4 @@ class Team {
 
         return teams;
     }
-
 }

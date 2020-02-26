@@ -1,11 +1,12 @@
 package com.epochcoder.games.tennis;
 
-import com.google.common.collect.Sets;
-
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -15,130 +16,160 @@ public class Game {
 //        final List<Player> guys = Player.toPlayers(Gender.MALE, "willie", "gabriel", "giovanni", "thiago");
 //        final List<Player> girls = Player.toPlayers(Gender.FEMALE, "katrin", "sylvia", "elizibetha", "paula");
 
-//        final List<Player> guys = Player.toPlayers(Gender.MALE, "willie", "gabriel", "giovanni", "thiago", "peter", "ernst");
-//        final List<Player> girls = Player.toPlayers(Gender.FEMALE, "katrin", "sylvia", "elizibetha", "paula", "lilly", "laura");
+        final List<Player> guys = Player.toPlayers(Gender.MALE, "willie", "gabriel", "giovanni", "thiago", "1", "2");
+        final List<Player> girls = Player.toPlayers(Gender.FEMALE, "katrin", "sylvia", "elizibetha", "paula", "A", "B");
 
 //        final List<Player> guys = Player.toPlayers(Gender.MALE, "willie", "gabriel", "giovanni", "thiago", "peter", "ernst", "1", "2");
 //        final List<Player> girls = Player.toPlayers(Gender.FEMALE, "katrin", "sylvia", "elizibetha", "paula", "lilly", "laura", "A", "B");
 
-        final List<Player> guys = Player.toPlayers(Gender.MALE, "1", "2", "3", "4");
-        final List<Player> girls = Player.toPlayers(Gender.FEMALE, "A", "B", "C", "D");
+//        final List<Player> guys = Player.toPlayers(Gender.MALE, "1", "2", "3", "4");
+//        final List<Player> girls = Player.toPlayers(Gender.FEMALE, "A", "B", "C", "D");
 
 //        final List<Player> guys = Player.toPlayers(Gender.MALE, "willie", "gabe");
 //        final List<Player> girls = Player.toPlayers(Gender.FEMALE, "katrin", "syl");
 
         final Set<Team> teams = Team.makeTeams(guys, girls);
+        System.out.println("Total teams: " + teams.size());
+        System.out.println("----------------------------");
 
         // check  Sets.cartesianProduct()
-
-        final Set<Player> allPlayers = new HashSet<>();
-        allPlayers.addAll(guys);
-        allPlayers.addAll(girls);
-
-        final boolean v1 = false;
-        final boolean v3 = true;
+        final Set<Player> allPlayers = teams.stream()
+                .flatMap(t -> t.getPlayers().stream())
+                .collect(Collectors.toSet());
 
         final long currentTime = System.currentTimeMillis();
-        if (v1) {
-            final Set<Match> allMatches = Match.findAllMatches(teams);
-            System.out.println("Total unique matches to play: " + allMatches.size());
 
-            final Set<Set<Match>> usedMatches = Match.buildMatchSets(
-                    Collections.unmodifiableSet(allPlayers),
-                    Collections.unmodifiableSet(allMatches));
+        final LinkedHashSet<Match> foundSets = findMatchSets(
+                Collections.unmodifiableSet(teams),
+                Collections.unmodifiableSet(allPlayers),
+                new LinkedHashSet<>(0),
+                0);
 
-            System.out.println("Possible to play " + usedMatches.size() + " sets (all players played unique games)");
-            System.out.println(usedMatches);
-        } else if (v3) {
-            System.out.println("v3 Match Maker init!");
-            System.out.println("-==================-");
+        System.out.println("Possible to play " + foundSets.size() + " sets (all players played unique games)");
+        System.out.println();
 
-            final Set<Set<Match>> foundSets = findMatchSets(
-                    Collections.unmodifiableSet(teams),
-                    Collections.unmodifiableSet(allPlayers),
-                    new HashSet<>(0), new HashSet<>(0),
-                    0);
+        // filter out duplicate matches, though we still need a way to optimally arrange themm
+        //final Set<Set<Match>> validSets = filterUniqueMatchSets(foundSets);
 
-            System.out.println("Possible to play " + foundSets.size() + " sets (all players played unique games)");
-            System.out.println();
+        System.out.println("ALL UNIQUE SETS:  " + foundSets.size() + " (all teams played unique matches)");
+        System.out.println("======");
 
-            // filter out duplicate matches, though we still need a way to optimally arrange themm
-            final Set<Set<Match>> validSets = filterUniqueMatchSets(foundSets);
+        final List<Match> matches = new ArrayList<>(foundSets);
+//        Collections.shuffle(matches);
 
-            System.out.println("======");
-            System.out.println("ALL UNIQUE SETS:  " + validSets.size() + " (all teams played unique matches)");
-            System.out.println("======");
-
-            for (Set<Match> validSet : validSets) {
-                validSet.forEach(System.out::println);
-                System.out.println("---");
+        for (int i = 0; i < matches.size(); i++) {
+            Match m = matches.get(i);
+            System.out.println(m);
+            if (i < matches.size() - 1 && (matches.get(i + 1).hasTeamFromMatch(m))) {
+                System.out.println("\tHas team from prev");
             }
         }
+
+        printPlayCountsForTeams(teams, foundSets);
+
+
+//            int inputLength = validSets.size();
+//            int temp;
+//            boolean is_sorted;
+//
+//            for (int i = 0; i < inputLength; i++) {
+//                is_sorted = true;
+//                for (int j = 1; j < (inputLength - i); j++) {
+//                    if (validSets.) {
+//                        temp = input[j - 1];
+//                        input[j - 1] = input[j];
+//                        input[j] = temp;
+//                        is_sorted = false;
+//                    }
+//                }
+//
+//                // is sorted? then break it, avoid useless loop.
+//                if (is_sorted) break;
+//            }
+
+//            int courts = 2;
+//            final List<Match> orderedMatches = new ArrayList<>(validSets.size());
+//            final Map<Team, Integer> playCount = new HashMap<>();
+//            teams.forEach(t -> playCount.putIfAbsent(t, 0));
+
+//            // NEED TO THINK OF SOMETHING ELSE
+//            while (!validSets.isEmpty()) {
+////                final Team nextTeam = playCount.entrySet().stream()
+////                        .sorted(Map.Entry.comparingByValue())
+////                        .findFirst().orElseThrow()
+////                        .getKey();
+//                final LinkedHashMap<Team, Integer> collect = playCount.entrySet().stream()
+//                        .sorted(Map.Entry.comparingByValue())
+//                        .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
+//                System.out.println("sorted....");
+//                collect.entrySet().forEach(System.out::println);
+//                System.out.println("----------");
+//
+//                final Team team = collect.entrySet().stream().findFirst().orElseThrow().getKey();
+//                System.out.println("trying to find for team: " + team);
+//                final Set<Match> selectedSet = validSets.stream().filter(s -> s.stream().anyMatch(match -> match.hasTeam(team))).findFirst().orElseGet(() ->{
+//                    System.out.println("whats left:");
+//                    validSets.forEach(System.out::println);
+//                    return null;
+//                });
+//
+//                selectedSet.forEach(m -> {
+//                    playCount.merge(m.getTeam1(), 1, Integer::sum);
+//                    playCount.merge(m.getTeam2(), 1, Integer::sum);
+//                });
+//                System.out.println("selected:  " + selectedSet);
+//
+//                System.out.println("removing, curr size: " + validSets.size());
+//                validSets.remove(selectedSet);
+//            }
+
 
         System.out.println("Took: " + (System.currentTimeMillis() - currentTime) + "ms");
     }
 
-    /**
-     * The input is a list of valid matches, but may contain the same team playing against another team
-     * This filtering ensures we do not have that
-     * @param foundSets
-     * @return //TODO: not so sure about this method, investigate
-     */
-    private static Set<Set<Match>> filterUniqueMatchSets(final Set<Set<Match>> foundSets) {
-        final Set<Set<Match>> validSets = new HashSet<>();
-        final Set<Match> selectedMatches = new HashSet<>();
+    private static void printPlayCountsForTeams(final Set<Team> teams, final Set<Match> validSets) {
+        final Map<Team, Integer> playCount = new LinkedHashMap<>();
+        teams.forEach(t -> playCount.putIfAbsent(t, 0));
 
-        // if a set has some duplicate, nest to chuck the whole set out (since the uniqueness is determined by set)
-        for (final Set<Match> matchSet : foundSets) {
-            boolean validSet = true;
-            for (final Match match1 : matchSet) {
-                if (selectedMatches.contains(match1) || selectedMatches.stream()
-                        .anyMatch(m -> m.isMirroredMatch(match1))) {
-                    validSet = false;
-                }
-            }
-
-            if (validSet) {
-                validSets.add(matchSet);
-                selectedMatches.addAll(matchSet);
-            }
-        }
-
-        return validSets;
+        validSets.forEach(System.out::println);
+        validSets.forEach(m -> {
+            playCount.merge(m.getTeam1(), 1, Integer::sum);
+            playCount.merge(m.getTeam2(), 1, Integer::sum);
+        });
+        System.out.println("-----------------");
+        playCount.entrySet().forEach(System.out::println);
     }
 
     private static void tabbedPrint(final int i, final String m) {
         //System.out.println(Strings.repeat("\t", i) + m);
     }
 
-    public static Set<Set<Match>> findMatchSets(
-            final Set<Team> teams, final Set<Player> players, final Set<Match> matches, final Set<Match> currentMatchSet, final int i) {
-        final Set<Set<Match>> allMatchSets = new LinkedHashSet<>();
+    public static LinkedHashSet<Match> findMatchSets(
+            final Set<Team> teams, final Set<Player> players, final Set<Match> matchSet, final int i) {
+        final LinkedHashSet<Match> orderedMatchSets = new LinkedHashSet<>();
 
-        final Set<Player> usedPlayers = new HashSet<>(8);
-        if (!currentMatchSet.isEmpty()) {
-            tabbedPrint(i, "Adding players from: " + currentMatchSet.size() + " match(es)!");
-            usedPlayers.addAll(currentMatchSet.stream()
+        final Set<Player> usedPlayers = new HashSet<>(players.size());
+        if (!matchSet.isEmpty()) {
+            tabbedPrint(i, "Adding players from: " + matchSet.size() + " match(es)!");
+            usedPlayers.addAll(matchSet.stream()
                     .flatMap(m -> m.getPlayers().stream())
                     .collect(Collectors.toSet()));
         }
 
         if (usedPlayers.containsAll(players)) {
             tabbedPrint(i, "Built complete match set for all players!");
-            tabbedPrint(i, "\tSet:" + currentMatchSet);
+            tabbedPrint(i, "\tSet:" + matchSet);
 
             // exit point, built a unique set
-            allMatchSets.add(currentMatchSet);
-
-            // register all matches played
-            matches.addAll(currentMatchSet);
+            orderedMatchSets.addAll(matchSet);
         } else {
-            final Set<Team> teamsWithUnusedPlayers = teams.stream()
+            final List<Team> teamsWithUnusedPlayers = teams.stream()
                     .filter(t -> usedPlayers.stream().noneMatch(t.getPlayers()::contains))
-                    .collect(Collectors.toSet());
+                    .collect(Collectors.toList());
 
             tabbedPrint(i, "Unused teams: " + teamsWithUnusedPlayers);
 
+            final Set<Match> selectedMatches = new HashSet<>();
             for (final Team team1 : teamsWithUnusedPlayers) {
                 for (final Team team2 : teamsWithUnusedPlayers) {
                     if (team1.equals(team2) || team1.hasPlayerFromTeam(team2)) {
@@ -146,28 +177,30 @@ public class Game {
                     }
 
                     final Match match = new Match(team1, team2);
-                    final boolean hasMirroredMatch = matches.contains(match) || matches.stream()
+                    final boolean hasMirroredMatch = selectedMatches.contains(match) || selectedMatches.stream()
                             .anyMatch(possibleMirroredMatch -> possibleMirroredMatch.isMirroredMatch(match));
 
                     if (!hasMirroredMatch) {
                         tabbedPrint(i, "Created match: " + match);
 
-                        final Set<Match> subMatches = new HashSet<>(currentMatchSet);
+                        selectedMatches.add(match);
+
+                        final LinkedHashSet<Match> subMatches = new LinkedHashSet<>(matchSet);
                         subMatches.add(match);
 
                         // find rest of the matches remaining for played matches
-                        final Set<Set<Match>> subMatchSets = findMatchSets(teams, players, matches, subMatches, i + 1);
+                        final Set<Match> subMatchSets = findMatchSets(teams, players, subMatches, i + 1);
 
                         tabbedPrint(i, "Found " + subMatchSets.size() + " sub match sets");
                         if (!subMatchSets.isEmpty()) {
-                            allMatchSets.addAll(subMatchSets);
+                            orderedMatchSets.addAll(subMatchSets);
                         }
                     }
                 }
             }
         }
 
-        return allMatchSets;
+        return orderedMatchSets;
     }
 }
 
