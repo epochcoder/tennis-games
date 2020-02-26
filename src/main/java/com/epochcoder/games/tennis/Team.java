@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Getter
 @EqualsAndHashCode
@@ -56,5 +57,11 @@ class Team {
         }
 
         return teams;
+    }
+
+    public static List<Team> getTeamsWithUnusedPlayers(final Set<Team> teams, final Set<Player> usedPlayers) {
+        return teams.stream()
+                .filter(t -> usedPlayers.stream().noneMatch(t.getPlayers()::contains))
+                .collect(Collectors.toList());
     }
 }
