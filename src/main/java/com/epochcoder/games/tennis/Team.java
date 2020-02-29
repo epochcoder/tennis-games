@@ -4,8 +4,11 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,10 +19,6 @@ class Team {
 
     private final Player player1;
     private final Player player2;
-
-    public String getId() {
-        return this.player1.getId() + "-" + this.player2.getId();
-    }
 
     public Set<Player> getPlayers() {
         return Set.of(this.player1, this.player2);
@@ -67,5 +66,37 @@ class Team {
         return teams.stream()
                 .filter(t -> usedPlayers.stream().noneMatch(t.getPlayers()::contains))
                 .collect(Collectors.toList());
+    }
+
+    public static Map<Team, Integer> getPlayCountsForTeams(final Set<Team> teams, final Collection<Match> matches) {
+        final Map<Team, Integer> playCount = new LinkedHashMap<>();
+        teams.forEach(t -> playCount.putIfAbsent(t, 0));
+
+        matches.forEach(m -> {
+            playCount.merge(m.getTeam1(), 1, Integer::sum);
+            playCount.merge(m.getTeam2(), 1, Integer::sum);
+        });
+
+        return playCount;
+    }
+
+    static Set<Team> getTestTeams(int playerCount) {
+        final List<Player> guys;
+        final List<Player> girls;
+        if (playerCount == 0) {
+            guys = Player.toPlayers(Gender.MALE, "1", "2", "3", "4");
+            girls = Player.toPlayers(Gender.FEMALE, "A", "B", "C", "D");
+        } else if (playerCount == 4) {
+            guys = Player.toPlayers(Gender.MALE, "willie", "gabriel", "giovanni", "thiago");
+            girls = Player.toPlayers(Gender.FEMALE, "katrin", "sylvia", "elizibetha", "paula");
+        } else if (playerCount == 6) {
+            guys = Player.toPlayers(Gender.MALE, "willie", "gabriel", "giovanni", "thiago", "peter", "ernst");
+            girls = Player.toPlayers(Gender.FEMALE, "katrin", "sylvia", "elizibetha", "paula", "lilly", "laura");
+        } else {
+            guys = Player.toPlayers(Gender.MALE, "willie", "gabe");
+            girls = Player.toPlayers(Gender.FEMALE, "katrin", "syl");
+        }
+
+        return makeTeams(guys, girls);
     }
 }

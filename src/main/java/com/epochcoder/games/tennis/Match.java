@@ -21,10 +21,6 @@ public class Match {
     private final Team team1;
     private final Team team2;
 
-    public String getId() {
-        return this.team1.getId() + "/" + this.getTeam2().getId();
-    }
-
     public boolean hasTeamFromMatch(final Match otherMatch) {
         return this.hasTeam(otherMatch.getTeam1()) || this.hasTeam(otherMatch.getTeam2());
     }
@@ -55,15 +51,24 @@ public class Match {
                 ')';
     }
 
-    public static List<AllPlayerGame> findGames(
+    /**
+     * Finds game permutations where each player gets a chance to play every game
+     *
+     * @param teams    the possible teams
+     * @param players  all players available
+     * @param matchSet the current match set
+     * @param i        the current iteration
+     * @return a list of games playable by all players
+     */
+    public static List<Game> findGames(
             final Set<Team> teams, final Set<Player> players, final Set<Match> matchSet, final int i) {
-        final List<AllPlayerGame> orderedGames = new ArrayList<>();
+        final List<Game> orderedGames = new ArrayList<>();
         final Set<Player> usedPlayers = matchSet.stream()
                 .flatMap(m -> m.getPlayers().stream())
                 .collect(Collectors.toSet());
 
         if (usedPlayers.containsAll(players)) {
-            orderedGames.add(new AllPlayerGame(matchSet));
+            orderedGames.add(new Game(matchSet));
             return orderedGames;
         }
 
@@ -75,11 +80,11 @@ public class Match {
                 }
 
                 final Match match = new Match(team1, team2);
-                if (orderedGames.stream().noneMatch(allPlayerGame -> allPlayerGame.hasMatch(match))) {
+                if (orderedGames.stream().noneMatch(game -> game.hasMatch(match))) {
                     final LinkedHashSet<Match> subMatches = new LinkedHashSet<>(matchSet);
                     subMatches.add(match);
 
-                    final List<AllPlayerGame> games = findGames(teams, players, subMatches, i + 1);
+                    final List<Game> games = findGames(teams, players, subMatches, i + 1);
                     if (!games.isEmpty()) {
                         orderedGames.addAll(games);
                     }
