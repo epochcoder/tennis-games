@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -19,6 +20,10 @@ public class Match {
 
     private final Team team1;
     private final Team team2;
+
+    public String getId() {
+        return this.team1.getId() + "/" + this.getTeam2().getId();
+    }
 
     public boolean hasTeamFromMatch(final Match otherMatch) {
         return this.hasTeam(otherMatch.getTeam1()) || this.hasTeam(otherMatch.getTeam2());
@@ -50,16 +55,16 @@ public class Match {
                 ')';
     }
 
-    public static Set<Match> findMatchSets(
+    public static List<AllPlayerGame> findGames(
             final Set<Team> teams, final Set<Player> players, final Set<Match> matchSet, final int i) {
-        final LinkedHashSet<Match> orderedMatchSets = new LinkedHashSet<>();
+        final List<AllPlayerGame> orderedGames = new ArrayList<>();
         final Set<Player> usedPlayers = matchSet.stream()
                 .flatMap(m -> m.getPlayers().stream())
                 .collect(Collectors.toSet());
 
         if (usedPlayers.containsAll(players)) {
-            orderedMatchSets.addAll(matchSet);
-            return orderedMatchSets;
+            orderedGames.add(new AllPlayerGame(matchSet));
+            return orderedGames;
         }
 
         final List<Team> teamsWithUnusedPlayers = Team.getTeamsWithUnusedPlayers(teams, usedPlayers);
@@ -70,24 +75,19 @@ public class Match {
                 }
 
                 final Match match = new Match(team1, team2);
-                final boolean hasMirroredMatch = orderedMatchSets.contains(match) || orderedMatchSets.stream()
-                        .anyMatch(possibleMirroredMatch -> possibleMirroredMatch.isMirroredMatch(match));
-
-                if (!hasMirroredMatch) {
+                if (orderedGames.stream().noneMatch(allPlayerGame -> allPlayerGame.hasMatch(match))) {
                     final LinkedHashSet<Match> subMatches = new LinkedHashSet<>(matchSet);
                     subMatches.add(match);
 
-                    // find rest of the matches remaining for played matches
-                    final Set<Match> subMatchSets = findMatchSets(teams, players, subMatches, i + 1);
-                    if (!subMatchSets.isEmpty()) {
-                        orderedMatchSets.addAll(subMatchSets);
+                    final List<AllPlayerGame> games = findGames(teams, players, subMatches, i + 1);
+                    if (!games.isEmpty()) {
+                        orderedGames.addAll(games);
                     }
                 }
             }
         }
 
-
-        return orderedMatchSets;
+        return orderedGames;
     }
 
 }

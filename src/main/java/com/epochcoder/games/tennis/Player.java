@@ -20,6 +20,10 @@ class Player {
     private final String name;
     private final Gender gender;
 
+    public String getId() {
+        return this.name.toLowerCase();
+    }
+
     public static List<Player> toPlayers(final Gender gender, final String... names) {
         return Arrays.stream(names)
                 .map(name -> new Player(name, gender))

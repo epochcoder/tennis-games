@@ -17,6 +17,10 @@ class Team {
     private final Player player1;
     private final Player player2;
 
+    public String getId() {
+        return this.player1.getId() + "-" + this.player2.getId();
+    }
+
     public Set<Player> getPlayers() {
         return Set.of(this.player1, this.player2);
     }
