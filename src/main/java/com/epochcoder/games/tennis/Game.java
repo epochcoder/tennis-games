@@ -1,6 +1,5 @@
 package com.epochcoder.games.tennis;
 
-import com.google.common.collect.EvictingQueue;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
@@ -30,11 +29,16 @@ public class Game {
         return playedMatches.stream().anyMatch(this.matches::contains);
     }
 
-    public boolean hasAnyTeams(final Game playerGame) {
-        // check if any matches has this team that played
-        return this.matches.stream()
-                .anyMatch(thisMatch -> playerGame.getMatches().stream()
-                        .anyMatch(thisMatch::hasTeamFromMatch));
+    public boolean hasTeamFromGame(final Game playerGame) {
+        final Set<Team> theseTeams = this.matches.stream()
+                .flatMap(match -> match.getTeams().stream())
+                .collect(Collectors.toSet());
+
+        final Set<Team> gameTeams = playerGame.getMatches().stream()
+                .flatMap(match -> match.getTeams().stream())
+                .collect(Collectors.toSet());
+
+        return theseTeams.stream().anyMatch(gameTeams::contains);
     }
 
     /**
@@ -57,7 +61,8 @@ public class Game {
             // make sure we haven't played it
             if (!currentGame.playedAnyMatch(matches)) {
                 // make sure this game has not been played last time
-                if (lastPlayed.isEmpty() || lastPlayed.stream().noneMatch(lp -> lp.hasAnyTeams(currentGame))) {
+                if (lastPlayed.isEmpty() || lastPlayed.stream()
+                        .noneMatch(lp -> lp.hasTeamFromGame(currentGame))) {
                     // add them in order
                     matches.addAll(currentGame.getMatches());
                     lastPlayed.offer(currentGame);
@@ -83,48 +88,47 @@ public class Game {
 
         return matches;
     }
-//
-//    private static List<Game> orderGames(final Collection<Game> games) {
-//        final Match[] matches = games.toArray(new Match[0]);
-//        for (int current = 0; current < matches.length; current++) {
-//            final Match currentMatch = matches[current];
-//
-//            if (current < (matches.length - 1)) {
-//                final int next = current + 1;
-//                while (currentMatch.hasTeamFromMatch(matches[next])) {
-//                    final int possible = findMatchForNext(matches, current, next);
-//                    if (possible == -1) {
-//                        System.err.println("Cannot find optimal match!");
-//                        break;
-//                    }
-//
-//                    final Match temp = matches[next];
-//                    matches[next] = matches[possible];
-//                    matches[possible] = temp;
-//                }
-//            }
-//        }
-//
-//        return List.of(matches);
-//    }
-//
-//    static int findMatchForNext(final Match[] matches, int current, int next) {
-//        for (int possible = 1; possible < matches.length - 1; possible++) {
-//            if (possible != current && possible != next) {
-//                Match currentMatch = matches[current];
-//                Match possibleMatch = matches[possible];
-//                Match nextMatch = matches[next];
-//
-//                // is a possibility for switch
-//                if (!possibleMatch.hasTeamFromMatch(currentMatch) && !possibleMatch.hasTeamFromMatch(nextMatch)) {
-//                    if (!matches[possible - 1].hasTeamFromMatch(nextMatch) && !matches[possible + 1].hasTeamFromMatch(nextMatch)) {
-//                        return possible;
-//                    }
-//                }
-//            }
-//        }
-//
-//        return -1;
-//    }
 
+    public static List<Game> orderGames(final List<Game> listOfGames) {
+        final Game[] games = listOfGames.toArray(new Game[0]);
+        for (int current = 0; current < games.length; current++) {
+            final Game currentGame = games[current];
+
+            if (current < (games.length - 1)) {
+                final int next = current + 1;
+                while (currentGame.hasTeamFromGame(games[next])) {
+                    final int possible = findGameForNext(games, current, next);
+                    if (possible == -1) {
+                        System.err.println("Cannot find optimal match!");
+                        break;
+                    }
+
+                    final Game temp = games[next];
+                    games[next] = games[possible];
+                    games[possible] = temp;
+                }
+            }
+        }
+
+        return List.of(games);
+    }
+
+    static int findGameForNext(final Game[] matches, int current, int next) {
+        for (int possible = 1; possible < matches.length - 1; possible++) {
+            if (possible != current && possible != next) {
+                Game currentGame = matches[current];
+                Game possibleGame = matches[possible];
+                Game nextGame = matches[next];
+
+                // is a possibility for switch
+                if (!possibleGame.hasTeamFromGame(currentGame) && !possibleGame.hasTeamFromGame(nextGame)) {
+                    if (!matches[possible - 1].hasTeamFromGame(nextGame) && !matches[possible + 1].hasTeamFromGame(nextGame)) {
+                        return possible;
+                    }
+                }
+            }
+        }
+
+        return -1;
+    }
 }

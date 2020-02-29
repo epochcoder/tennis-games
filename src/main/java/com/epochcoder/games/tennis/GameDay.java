@@ -17,7 +17,7 @@ public class GameDay {
 
     private final List<Match> matchList;
 
-    public static List<GameDay> toGameDays(final int courts, final List<Match> matches) {
+    public static List<GameDay> fromMatches(final int courts, final List<Match> matches) {
         final int amountOfGames = IntMath.divide(matches.size(), courts, RoundingMode.UP);
         final int partitionSize = IntMath.divide(matches.size(), amountOfGames, RoundingMode.UP);
         return Lists.partition(matches, partitionSize).stream()

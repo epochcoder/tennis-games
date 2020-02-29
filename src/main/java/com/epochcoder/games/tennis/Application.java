@@ -7,14 +7,15 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class Application {
 
     public static void main(final String[] args) {
-
-        final Set<Team> teams = Team.getTestTeams(0);
-        buildGameDays(teams, 2);
-
+        final Set<Team> teams = Team.getTestTeams(4);
+        List<GameDay> gameDays = buildGameDays(teams, 2);
+        System.out.println("Possible to play " + gameDays.size() + " times");
+        gameDays.forEach(System.out::println);
     }
 
     public static List<GameDay> buildGameDays(final Set<Team> teams, final int courts) {
@@ -30,22 +31,29 @@ public class Application {
         // possible to shuffle since our sets are complete
         Collections.shuffle(games);
 
-        final List<Match> matches = Game.placeMatches(games, EvictingQueue.create(2), 0);
-        System.out.println("Placed " + matches.size() + " matches");
+        final List<Match> matches = getOrderedMatchesFromGames(games);
+        return GameDay.fromMatches(courts, matches);
+    }
+
+    public static List<Match> getOrderedMatchesFromGames(final List<Game> games) {
+        final List<Match> matches;
+        boolean v1 = true;
+        if (v1) {
+            // recursive match ordering
+            matches = Game.placeMatches(games, EvictingQueue.create(2), 0);
+        } else {
+            // iterative game shuffling
+            matches = Game.orderGames(games).stream()
+                    .flatMap(game -> game.getMatches()
+                            .stream()).collect(Collectors.toList());
+        }
 
         checkNextMatches(matches);
-
-        Map<Team, Integer> playCountsForTeams = Team.getPlayCountsForTeams(teams, matches);
-        playCountsForTeams.entrySet().forEach(System.out::println);
-
-        final List<GameDay> gameDays = GameDay.toGameDays(courts, matches);
-
-        System.out.println("Possible to play " + gameDays.size() + " times");
-        gameDays.forEach(System.out::println);
-        return gameDays;
+        return matches;
     }
 
     private static void checkNextMatches(final List<Match> matches) {
+        System.out.println("Checking " + matches.size() + " matches");
         for (int i = 0; i < matches.size(); i++) {
             Match currentMatch = matches.get(i);
             System.out.print(i + ":\t" + currentMatch);
