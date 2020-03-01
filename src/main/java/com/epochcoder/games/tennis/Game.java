@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Queue;
@@ -31,16 +32,60 @@ public class Game {
         return playedMatches.stream().anyMatch(this.matches::contains);
     }
 
-    public boolean hasTeamFromGame(final Game playerGame) {
+    public boolean hasTeamFromMatches(final Collection<Match> playedMatches) {
         final Set<Team> theseTeams = this.matches.stream()
                 .flatMap(match -> match.getTeams().stream())
                 .collect(Collectors.toSet());
 
-        final Set<Team> gameTeams = playerGame.getMatches().stream()
+        final Set<Team> matchTeams = playedMatches.stream()
                 .flatMap(match -> match.getTeams().stream())
                 .collect(Collectors.toSet());
 
-        return theseTeams.stream().anyMatch(gameTeams::contains);
+        return theseTeams.stream().anyMatch(matchTeams::contains);
+    }
+
+
+    public boolean hasTeamFromGame(final Game playerGame) {
+        return hasTeamFromMatches(playerGame.getMatches());
+    }
+
+    public static List<Match> teamBasedMatchOrdering(final List<Game> games, final List<Team> all) {
+        final List<Match> matches = new ArrayList<>();
+        final List<Match> roundMatches = new ArrayList<>();
+        final Queue<Team> remaining = new LinkedList<>();
+
+        Collections.shuffle(all);
+
+        // while we have games left to play
+        while (!games.isEmpty()) {
+            // get a set of fresh team if we ran out
+            if (remaining.isEmpty()) {
+                remaining.addAll(all);
+                roundMatches.clear();
+            }
+
+            final Team team = remaining.poll();
+            games.stream()
+                    // get a match for the currently selected team
+                    .filter(game -> game.getMatches().stream().anyMatch(match -> match.hasTeam(team)))
+                    // cannot have a match that played before in this round
+                    .filter(game -> !game.playedAnyMatch(roundMatches))
+                    // the game matches cannot have any teams that have played this round
+                    .filter(game -> !game.hasTeamFromMatches(roundMatches))
+                    .findFirst()
+                    .ifPresent(game -> {
+                        // update all matches
+                        matches.addAll(game.getMatches());
+                        // and round matches
+                        roundMatches.addAll(game.getMatches());
+
+                        // remove game and remaining teams
+                        games.remove(game);
+                        remaining.removeIf(t -> game.getMatches().stream().anyMatch(gm -> gm.hasTeam(t)));
+                    });
+        }
+
+        return matches;
     }
 
     /**

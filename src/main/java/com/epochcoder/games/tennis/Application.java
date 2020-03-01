@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -15,8 +16,9 @@ import java.util.stream.Collectors;
 public class Application {
 
     public static void main(final String[] args) {
-        final Set<Team> teams = Team.getTestTeams(4);
-        final List<GameDay> gameDays = buildGameDays(ChronoUnit.WEEKS, teams, 2, true);
+        final Set<Team> teams = Team.getTestTeams(0);
+        teams.forEach(System.out::println);
+        final List<GameDay> gameDays = buildGameDays(ChronoUnit.WEEKS, teams, 2, false);
 
         log.info("Possible to play {} times", gameDays.size());
         gameDays.forEach(gameDay -> log.info(gameDay.toString()));
@@ -35,24 +37,22 @@ public class Application {
         // possible to shuffle since our sets are complete
         Collections.shuffle(games);
 
-        final List<Match> matches = getOrderedMatchesFromGames(games, keepInvalid);
+        final List<Match> matches = getOrderedMatchesFromGames(games, teams, keepInvalid);
         return GameDay.fromMatches(unit, courts, matches);
     }
 
-    public static List<Match> getOrderedMatchesFromGames(final List<Game> games, final boolean keepInvalid) {
+    public static List<Match> getOrderedMatchesFromGames(final List<Game> games, final Set<Team> teams, final boolean keepInvalid) {
         final List<Match> matches;
-        boolean v1 = false;
-        boolean v2 = true;
+        boolean v1 = true;
+        boolean v2 = false;
         if (v1) {
-            // recursive match ordering
+            log.info("recursive match ordering");
             matches = Game.placeMatches(games, EvictingQueue.create(2), keepInvalid, 0);
         } else if (v2) {
-            // based on team played ordering
-            matches = games.stream()
-                    .flatMap(game -> game.getMatches()
-                            .stream()).collect(Collectors.toList());
+            log.info("based on team played ordering");
+            matches = Game.teamBasedMatchOrdering(games, new ArrayList<>(teams));
         } else {
-            // iterative game shuffling
+            log.info("iterative game shuffling");
             matches = Game.orderGames(games).stream()
                     .flatMap(game -> game.getMatches()
                             .stream()).collect(Collectors.toList());
@@ -60,5 +60,6 @@ public class Application {
 
         return matches;
     }
+
 
 }
