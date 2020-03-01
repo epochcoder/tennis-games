@@ -3,6 +3,7 @@ package com.epochcoder.games.tennis;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -13,6 +14,7 @@ import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Getter
 @ToString
 @RequiredArgsConstructor
@@ -44,12 +46,13 @@ public class Game {
     /**
      * Place games in such a way as to avoid exact same matches played and ensuring teams don't play again after each other
      *
-     * @param games      a random list of games to be played
-     * @param lastPlayed a circular array of the last games played
-     * @param i          the current iteration
+     * @param games       a random list of games to be played
+     * @param lastPlayed  a circular array of the last games played
+     * @param keepInvalid keep matches which could not mbe placed correctly?
+     * @param i           the current iteration
      * @return all matches in the order they should be played
      */
-    public static List<Match> placeMatches(final List<Game> games, final Queue<Game> lastPlayed, final int i) {
+    public static List<Match> placeMatches(final List<Game> games, final Queue<Game> lastPlayed, final boolean keepInvalid, final int i) {
         final Queue<Game> queue = new ArrayBlockingQueue<>(games.size(), true, games);
         final List<Match> matches = new ArrayList<>();
         final List<Game> remaining = new LinkedList<>();
@@ -76,14 +79,14 @@ public class Game {
         }
 
         if (!foundAtLeastOne) {
-            System.err.println("Could not place " + remaining.size() + " matches");
-            matches.addAll(remaining.stream()
-                    .flatMap(g -> g.getMatches().stream())
-                    .collect(Collectors.toList()));
-        } else {
-            if (!remaining.isEmpty()) {
-                matches.addAll(placeMatches(remaining, lastPlayed, i + 1));
+            if (keepInvalid) {
+                log.debug("Could not place {} matches", remaining.size());
+                matches.addAll(remaining.stream()
+                        .flatMap(g -> g.getMatches().stream())
+                        .collect(Collectors.toList()));
             }
+        } else if (!remaining.isEmpty()) {
+            matches.addAll(placeMatches(remaining, lastPlayed, keepInvalid, i + 1));
         }
 
         return matches;
@@ -99,7 +102,7 @@ public class Game {
                 while (currentGame.hasTeamFromGame(games[next])) {
                     final int possible = findGameForNext(games, current, next);
                     if (possible == -1) {
-                        System.err.println("Cannot find optimal match!");
+                        log.debug("Cannot find optimal match for {}!", games[next]);
                         break;
                     }
 

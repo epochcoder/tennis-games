@@ -95,4 +95,19 @@ public class Match {
         return orderedGames;
     }
 
+    static void checkNextMatches(final List<Match> matches) {
+        log.info("Checking {} matches", matches.size());
+        for (int i = 0; i < matches.size(); i++) {
+            Match currentMatch = matches.get(i);
+            log.info(i + ":\t" + currentMatch);
+            if (i < matches.size() - 1) {
+                Match nextMatch = matches.get(i + 1);
+                if (currentMatch.hasTeamFromMatch(nextMatch)) {
+                    log.info("\t\t (next match has team)");
+                }
+            }
+
+            System.out.println();
+        }
+    }
 }
