@@ -28,8 +28,8 @@ public class Game {
                 .anyMatch(possibleMirroredMatch -> possibleMirroredMatch.isMirroredMatch(match));
     }
 
-    public boolean playedAnyMatch(final Collection<Match> playedMatches) {
-        return playedMatches.stream().anyMatch(this.matches::contains);
+    public boolean didNotPlayAnyMatch(final Collection<Match> playedMatches) {
+        return playedMatches.stream().noneMatch(this.matches::contains);
     }
 
     public boolean hasTeamFromMatches(final Collection<Match> playedMatches) {
@@ -69,7 +69,7 @@ public class Game {
                     // get a match for the currently selected team
                     .filter(game -> game.getMatches().stream().anyMatch(match -> match.hasTeam(team)))
                     // cannot have a match that played before in this round
-                    .filter(game -> !game.playedAnyMatch(roundMatches))
+                    .filter(game -> game.didNotPlayAnyMatch(roundMatches))
                     // the game matches cannot have any teams that have played this round
                     .filter(game -> !game.hasTeamFromMatches(roundMatches))
                     .findFirst()
@@ -107,7 +107,7 @@ public class Game {
             final Game currentGame = queue.poll();
 
             // make sure we haven't played it
-            if (!currentGame.playedAnyMatch(matches)) {
+            if (currentGame.didNotPlayAnyMatch(matches)) {
                 // make sure this game has not been played last time
                 if (lastPlayed.isEmpty() || lastPlayed.stream()
                         .noneMatch(lp -> lp.hasTeamFromGame(currentGame))) {

@@ -17,14 +17,13 @@ public class Application {
 
     public static void main(final String[] args) {
         final Set<Team> teams = Team.getTestTeams(0);
-        teams.forEach(System.out::println);
-        final List<GameDay> gameDays = buildGameDays(ChronoUnit.WEEKS, teams, 2, false);
+        final List<GameDay> gameDays = buildGameDays(ChronoUnit.WEEKS, ShuffleMode.TEAM, teams, 2, false);
 
         log.info("Possible to play {} times", gameDays.size());
         gameDays.forEach(gameDay -> log.info(gameDay.toString()));
     }
 
-    public static List<GameDay> buildGameDays(final TemporalUnit unit, final Set<Team> teams, final int courts, final boolean keepInvalid) {
+    public static List<GameDay> buildGameDays(final TemporalUnit unit, final ShuffleMode mode, final Set<Team> teams, final int courts, final boolean keepInvalid) {
         final Set<Player> allPlayers = Player.getPlayers(teams);
 
         // get games letting each player play
@@ -37,23 +36,26 @@ public class Application {
         // possible to shuffle since our sets are complete
         Collections.shuffle(games);
 
-        final List<Match> matches = getOrderedMatchesFromGames(games, teams, keepInvalid);
+        final List<Match> matches = getOrderedMatchesFromGames(games, teams, mode, keepInvalid);
         return GameDay.fromMatches(unit, courts, matches);
     }
 
-    public static List<Match> getOrderedMatchesFromGames(final List<Game> games, final Set<Team> teams, final boolean keepInvalid) {
+    public static List<Match> getOrderedMatchesFromGames(final List<Game> games, final Set<Team> teams, final ShuffleMode mode, final boolean keepInvalid) {
         final List<Match> matches;
-        boolean v1 = true;
-        boolean v2 = false;
-        if (v1) {
+        if (mode == ShuffleMode.RECURSIVE) {
             log.info("recursive match ordering");
             matches = Game.placeMatches(games, EvictingQueue.create(2), keepInvalid, 0);
-        } else if (v2) {
+        } else if (mode == ShuffleMode.TEAM) {
             log.info("based on team played ordering");
             matches = Game.teamBasedMatchOrdering(games, new ArrayList<>(teams));
-        } else {
+        } else if (mode == ShuffleMode.GAME) {
             log.info("iterative game shuffling");
             matches = Game.orderGames(games).stream()
+                    .flatMap(game -> game.getMatches()
+                            .stream()).collect(Collectors.toList());
+        } else {
+            log.info("no shuffling");
+            matches = games.stream()
                     .flatMap(game -> game.getMatches()
                             .stream()).collect(Collectors.toList());
         }
@@ -61,5 +63,7 @@ public class Application {
         return matches;
     }
 
-
+    enum ShuffleMode {
+        RECURSIVE, TEAM, GAME
+    }
 }
