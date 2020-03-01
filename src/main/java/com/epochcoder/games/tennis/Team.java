@@ -86,6 +86,9 @@ class Team {
         if (playerCount == 0) {
             guys = Player.toPlayers(Gender.MALE, "1", "2", "3", "4");
             girls = Player.toPlayers(Gender.FEMALE, "A", "B", "C", "D");
+        } else if (playerCount == 1) {
+            guys = Player.toPlayers(Gender.MALE, "ER", "AN", "WA", "CH");
+            girls = Player.toPlayers(Gender.FEMALE, "EL", "GE", "IN", "SO");
         } else if (playerCount == 4) {
             guys = Player.toPlayers(Gender.MALE, "willie", "gabriel", "giovanni", "thiago");
             girls = Player.toPlayers(Gender.FEMALE, "katrin", "sylvia", "elizibetha", "paula");

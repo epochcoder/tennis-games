@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 public class Application {
 
     public static void main(final String[] args) {
-        final Set<Team> teams = Team.getTestTeams(0);
+        final Set<Team> teams = Team.getTestTeams(1);
         final List<GameDay> gameDays = buildGameDays(ChronoUnit.WEEKS, ShuffleMode.TEAM, teams, 2, false);
 
         log.info("Possible to play {} times", gameDays.size());
