@@ -4,11 +4,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
-import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -66,18 +63,6 @@ class Team {
         return teams.stream()
                 .filter(t -> usedPlayers.stream().noneMatch(t.getPlayers()::contains))
                 .collect(Collectors.toList());
-    }
-
-    public static Map<Team, Integer> getPlayCountsForTeams(final Set<Team> teams, final Collection<Match> matches) {
-        final Map<Team, Integer> playCount = new LinkedHashMap<>();
-        teams.forEach(t -> playCount.putIfAbsent(t, 0));
-
-        matches.forEach(m -> {
-            playCount.merge(m.getTeam1(), 1, Integer::sum);
-            playCount.merge(m.getTeam2(), 1, Integer::sum);
-        });
-
-        return playCount;
     }
 
     static Set<Team> getTestTeams(int playerCount) {

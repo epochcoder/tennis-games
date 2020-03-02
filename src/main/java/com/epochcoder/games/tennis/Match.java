@@ -35,7 +35,7 @@ public class Match {
     }
 
     public Set<Player> getPlayers() {
-        return getTeams().stream()
+        return this.getTeams().stream()
                 .flatMap(t -> t.getPlayers().stream())
                 .collect(Collectors.toSet());
     }
@@ -96,14 +96,15 @@ public class Match {
     }
 
     static void checkNextMatches(final List<Match> matches) {
-        log.info("Checking {} matches", matches.size());
+        log.debug("Checking {} matches", matches.size());
         for (int i = 0; i < matches.size(); i++) {
             Match currentMatch = matches.get(i);
-            log.info(i + ":\t" + currentMatch);
+            log.debug(i + ":\t" + currentMatch);
             if (i < matches.size() - 1) {
-                Match nextMatch = matches.get(i + 1);
+                final Match nextMatch = matches.get(i + 1);
                 if (currentMatch.hasTeamFromMatch(nextMatch)) {
-                    log.info("\t\t (next match has team)");
+                    log.debug("\t\t (next match has team)");
+                    throw new IllegalStateException("Matches are not in optimal order!");
                 }
             }
         }
