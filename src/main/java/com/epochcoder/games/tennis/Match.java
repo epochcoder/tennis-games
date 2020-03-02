@@ -106,8 +106,6 @@ public class Match {
                     log.info("\t\t (next match has team)");
                 }
             }
-
-            System.out.println();
         }
     }
 }

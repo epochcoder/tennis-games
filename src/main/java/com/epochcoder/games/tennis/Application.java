@@ -37,6 +37,7 @@ public class Application {
         Collections.shuffle(games);
 
         final List<Match> matches = getOrderedMatchesFromGames(games, teams, mode, keepInvalid);
+        Match.checkNextMatches(matches);
         return GameDay.fromMatches(unit, courts, matches);
     }
 

@@ -8,8 +8,13 @@ import lombok.extern.slf4j.Slf4j;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -23,6 +28,12 @@ public class Game {
 
     private final Set<Match> matches;
 
+    public Set<Team> getTeams() {
+        return this.matches.stream()
+                .flatMap(match -> match.getTeams().stream())
+                .collect(Collectors.toSet());
+    }
+
     public boolean hasMatch(final Match match) {
         return this.matches.contains(match) || this.matches.stream()
                 .anyMatch(possibleMirroredMatch -> possibleMirroredMatch.isMirroredMatch(match));
@@ -33,57 +44,93 @@ public class Game {
     }
 
     public boolean hasTeamFromMatches(final Collection<Match> playedMatches) {
-        final Set<Team> theseTeams = this.matches.stream()
-                .flatMap(match -> match.getTeams().stream())
-                .collect(Collectors.toSet());
-
-        final Set<Team> matchTeams = playedMatches.stream()
-                .flatMap(match -> match.getTeams().stream())
-                .collect(Collectors.toSet());
-
-        return theseTeams.stream().anyMatch(matchTeams::contains);
+        return hasTeamFromGame(new Game(new HashSet<>(playedMatches)));
     }
-
 
     public boolean hasTeamFromGame(final Game playerGame) {
-        return hasTeamFromMatches(playerGame.getMatches());
+        final Set<Team> theseTeams = this.getTeams();
+        final Set<Team> thoseTeams = playerGame.getTeams();
+
+        return theseTeams.stream().anyMatch(thoseTeams::contains);
     }
 
-    public static List<Match> teamBasedMatchOrdering(final List<Game> games, final List<Team> all) {
+    public static List<Match> teamBasedMatchOrdering(final List<Game> games, final List<Team> teams) {
         final List<Match> matches = new ArrayList<>();
         final List<Match> roundMatches = new ArrayList<>();
-        final Queue<Team> remaining = new LinkedList<>();
+        final LinkedList<Team> remaining = new LinkedList<>();
+        final Set<Team> lastRoundTeams = new HashSet<>();
 
-        Collections.shuffle(all);
+        Collections.shuffle(teams);
+
+        final Map<Team, Integer> playCount = new LinkedHashMap<>();
+        teams.forEach(t -> playCount.putIfAbsent(t, 0));
 
         // while we have games left to play
         while (!games.isEmpty()) {
             // get a set of fresh team if we ran out
             if (remaining.isEmpty()) {
-                remaining.addAll(all);
-                roundMatches.clear();
+                remaining.addAll(teams);
+                remaining.sort(Comparator.comparing(playCount::get));
+
+                roundMatches.clear(); // TODO: (maybe not remove that last of the added)
+                System.out.println();
             }
 
             final Team team = remaining.poll();
-            games.stream()
+            System.out.println("Finding match for team: " + team + " (" + playCount.get(team) + ") games remaining: " + games.size());
+            Optional<Game> first = games.stream()
                     // get a match for the currently selected team
                     .filter(game -> game.getMatches().stream().anyMatch(match -> match.hasTeam(team)))
                     // cannot have a match that played before in this round
                     .filter(game -> game.didNotPlayAnyMatch(roundMatches))
                     // the game matches cannot have any teams that have played this round
                     .filter(game -> !game.hasTeamFromMatches(roundMatches))
-                    .findFirst()
+                    // and the game does not have any of the teams that played last round
+                    .filter(game -> game.getTeams().stream().noneMatch(lastRoundTeams::contains))
+                    .findFirst();
+
+            first
                     .ifPresent(game -> {
-                        // update all matches
+                        // new round, clear last rounf
+                        // update teams matches
                         matches.addAll(game.getMatches());
-                        // and round matches
+                        // update round matches
                         roundMatches.addAll(game.getMatches());
+
+                        System.out.println("\tFound matches:");
+                        game.getMatches().forEach(c -> {
+                            System.out.println("\t\t" + c);
+                        });
+
+                        // update last round teams
+                        lastRoundTeams.clear();
+                        lastRoundTeams.addAll(game.getTeams());
+
+                        // update play counts
+                        game.getTeams().forEach(playedTeam -> {
+                            playCount.merge(playedTeam, 1, Integer::sum);
+                        });
 
                         // remove game and remaining teams
                         games.remove(game);
-                        remaining.removeIf(t -> game.getMatches().stream().anyMatch(gm -> gm.hasTeam(t)));
+                        remaining.removeIf(game.getTeams()::contains);
+                        System.out.println("\tRemaining teams: " + remaining.size());
+
+                        // sort remaining for next iteration based on play counts
+                        remaining.sort(Comparator.comparing(playCount::get));
+                        remaining.forEach(r -> {
+                            System.out.println("\t\t" + r + ": " + playCount.get(r));
+                        });
+
+                        System.out.println("\t\t\tNext is: " + remaining.peek());
+                        System.out.println("\t\t\tLast round teams are: " + lastRoundTeams);
                     });
+
+            if (first.isEmpty()) {
+                System.out.println("\tDid not find match!");
+            }
         }
+        System.out.println("found all matches");
 
         return matches;
     }
