@@ -1,5 +1,6 @@
-package com.epochcoder.games.tennis;
+package com.epochcoder.games.tennis.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.collect.Lists;
 import com.google.common.math.IntMath;
 import lombok.Getter;
@@ -11,7 +12,11 @@ import java.time.DayOfWeek;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -19,9 +24,29 @@ import java.util.stream.Collectors;
 @ToString
 @RequiredArgsConstructor
 public class GameDay {
-
+    @JsonProperty
     private final LocalDate matchDate;
+    @JsonProperty
     private final List<Match> matchList;
+
+    public static List<GameDay> buildGameDays(final TemporalUnit unit, final Set<Team> teams, final int courts) {
+        final Set<Player> allPlayers = Player.getPlayers(teams);
+
+        // get games letting each player play
+        final List<Game> games = Match.findGames(
+                Collections.unmodifiableSet(teams),
+                Collections.unmodifiableSet(allPlayers),
+                new LinkedHashSet<>(0),
+                0);
+
+        // possible to shuffle since our sets are complete
+        Collections.shuffle(games);
+
+        final List<Match> matches = Game.teamBasedMatchOrdering(games, new ArrayList<>(teams));
+        Match.checkNextMatches(matches);
+
+        return GameDay.fromMatches(unit, courts, matches);
+    }
 
     public static List<GameDay> fromMatches(final TemporalUnit temporalUnit, final int courts, final List<Match> matches) {
         final AtomicInteger counter = new AtomicInteger();

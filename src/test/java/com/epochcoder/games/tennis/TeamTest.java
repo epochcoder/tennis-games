@@ -1,5 +1,8 @@
 package com.epochcoder.games.tennis;
 
+import com.epochcoder.games.tennis.domain.Gender;
+import com.epochcoder.games.tennis.domain.Player;
+import com.epochcoder.games.tennis.domain.Team;
 import org.junit.jupiter.api.Test;
 
 import java.util.UUID;

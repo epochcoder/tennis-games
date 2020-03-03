@@ -1,4 +1,4 @@
-package com.epochcoder.games.tennis;
+package com.epochcoder.games.tennis.domain;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

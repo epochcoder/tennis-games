@@ -1,5 +1,6 @@
-package com.epochcoder.games.tennis;
+package com.epochcoder.games.tennis.domain;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +16,11 @@ import java.util.stream.Collectors;
 @ToString
 @EqualsAndHashCode
 @RequiredArgsConstructor
-class Player {
+public class Player {
 
+    @JsonProperty
     private final String name;
+    @JsonProperty
     private final Gender gender;
 
     public static List<Player> toPlayers(final Gender gender, final String... names) {
