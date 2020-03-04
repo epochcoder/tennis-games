@@ -1,0 +1,135 @@
+openapi: 3.0.2
+
+info:
+  title: Tennis Service
+  version: 1.0.0
+  description: >-
+    The tennis service allows games to be generated for male/female duo's
+
+servers:
+  - url: http://localhost:8080
+    description: local
+
+paths:
+  /games:
+    get:
+      summary: Retrieves a new set of games to be played
+      operationId: generateGames
+      parameters:
+        - name: games
+          in: query
+          description: the amount of games to generate, defaults to all
+          schema:
+            type: integer
+        - name: courts
+          in: query
+          required: true
+          description: the amount of playable courts
+          schema:
+            type: integer
+        - name: interval
+          in: query
+          required: true
+          description: over which interval should the games be spread
+          schema:
+            $ref: '#/components/schemas/MatchInterval'
+        - name: men
+          in: query
+          required: true
+          description: the unique names of all the male players
+          schema:
+            type: array
+            items:
+              type: string
+        - name: women
+          in: query
+          required: true
+          description: the unique names of all the female players
+          schema:
+            type: array
+            items:
+              type: string
+      responses:
+        '200':
+          description: ok
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GamesResponse'
+components:
+  schemas:
+
+    Player:
+      type: object
+      required:
+        - name
+        - gender
+      properties:
+        name:
+          type: string
+        gender:
+          type: string
+          enum:
+            - MALE
+            - FEMALE
+
+    Team:
+      type: object
+      required:
+        - playerA
+        - playerB
+      properties:
+        playerA:
+          $ref: '#/components/schemas/Player'
+        playerB:
+          $ref: '#/components/schemas/Player'
+
+    MatchInterval:
+      type: string
+      enum:
+        - WEEKS
+        - MONTHS
+
+    Match:
+      type: object
+      required:
+        - teamA
+        - teamB
+      properties:
+        court:
+          type: integer
+        teamA:
+          $ref: '#/components/schemas/Team'
+        teamB:
+          $ref: '#/components/schemas/Team'
+
+    Interval:
+      type: object
+      required:
+        - date
+        - matches
+      properties:
+        date:
+          type: string
+          format: date
+        matches:
+          type: array
+          items:
+            $ref: '#/components/schemas/Match'
+
+    GamesResponse:
+      type: object
+      description:
+      required:
+        - courts
+        - interval
+        - intervals
+      properties:
+        courts:
+          type: integer
+        intervalType:
+          $ref: '#/components/schemas/MatchInterval'
+        intervals:
+          type: array
+          items:
+            $ref: '#/components/schemas/Interval'

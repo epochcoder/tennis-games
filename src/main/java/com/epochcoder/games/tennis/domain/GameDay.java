@@ -24,9 +24,8 @@ import java.util.stream.Collectors;
 @ToString
 @RequiredArgsConstructor
 public class GameDay {
-    @JsonProperty
+
     private final LocalDate matchDate;
-    @JsonProperty
     private final List<Match> matchList;
 
     public static List<GameDay> buildGameDays(final TemporalUnit unit, final Set<Team> teams, final int courts) {

@@ -1,5 +1,6 @@
 package com.epochcoder.games.tennis.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;

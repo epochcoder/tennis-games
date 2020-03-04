@@ -1,5 +1,6 @@
 package com.epochcoder.games.tennis.domain;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -14,9 +15,8 @@ import java.util.stream.Collectors;
 @EqualsAndHashCode
 @RequiredArgsConstructor
 public class Team {
-    @JsonProperty
+
     private final Player player1;
-    @JsonProperty
     private final Player player2;
 
     public Set<Player> getPlayers() {

@@ -18,9 +18,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class Player {
 
-    @JsonProperty
     private final String name;
-    @JsonProperty
     private final Gender gender;
 
     public static List<Player> toPlayers(final Gender gender, final String... names) {

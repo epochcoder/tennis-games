@@ -10,4 +10,4 @@ Future versions may do this lazily based on amount of games requested and allow 
 
 ## Examples
 
-* `curl "localhost:8080/games?amountOfGameDays=21&amountOfCourts=2&interval=WEEKS&men=1&men=2&men=3&men=4&women=A&women=B&women=C&women=D"`
+`http://localhost:8080/games?games=10&courts=2&interval=WEEKS&men=1&men=2&men=3&men=4&women=A&women=B&women=C&women=D`
