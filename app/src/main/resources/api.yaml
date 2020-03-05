@@ -59,7 +59,7 @@ paths:
 components:
   schemas:
 
-    Player:
+    PlayerView:
       type: object
       required:
         - name
@@ -73,16 +73,16 @@ components:
             - MALE
             - FEMALE
 
-    Team:
+    TeamView:
       type: object
       required:
         - playerA
         - playerB
       properties:
         playerA:
-          $ref: '#/components/schemas/Player'
+          $ref: '#/components/schemas/PlayerView'
         playerB:
-          $ref: '#/components/schemas/Player'
+          $ref: '#/components/schemas/PlayerView'
 
     MatchInterval:
       type: string
@@ -90,7 +90,7 @@ components:
         - WEEKS
         - MONTHS
 
-    Match:
+    MatchView:
       type: object
       required:
         - teamA
@@ -99,9 +99,9 @@ components:
         court:
           type: integer
         teamA:
-          $ref: '#/components/schemas/Team'
+          $ref: '#/components/schemas/TeamView'
         teamB:
-          $ref: '#/components/schemas/Team'
+          $ref: '#/components/schemas/TeamView'
 
     Interval:
       type: object
@@ -115,7 +115,7 @@ components:
         matches:
           type: array
           items:
-            $ref: '#/components/schemas/Match'
+            $ref: '#/components/schemas/MatchView'
 
     GamesResponse:
       type: object

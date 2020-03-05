@@ -1,39 +1,43 @@
 package com.epochcoder.games.tennis.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+import org.immutables.value.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 
-@Slf4j
-@Getter
-@EqualsAndHashCode
-@RequiredArgsConstructor
-public class Match {
+@Value.Immutable
+public abstract class Match {
 
-    private final Team team1;
-    private final Team team2;
+    private static final Logger log = LoggerFactory.getLogger(Match.class);
+
+    public abstract Team getTeamA();
+
+    public abstract Team getTeamB();
 
     public boolean hasTeamFromMatch(final Match otherMatch) {
-        return this.hasTeam(otherMatch.getTeam1()) || this.hasTeam(otherMatch.getTeam2());
+        return this.hasTeam(otherMatch.getTeamA()) || this.hasTeam(otherMatch.getTeamB());
     }
 
     public boolean hasTeam(final Team team) {
-        return (this.getTeam1().equals(team) || this.getTeam1().isMirroredTeam(team))
-                || (this.getTeam2().equals(team) || this.getTeam2().isMirroredTeam(team));
+        return (this.getTeamA().equals(team) || this.getTeamA().isMirroredTeam(team))
+                || (this.getTeamB().equals(team) || this.getTeamB().isMirroredTeam(team));
     }
 
     public Set<Team> getTeams() {
-        return Set.of(this.team1, this.team2);
+        return Set.of(this.getTeamA(), this.getTeamB());
     }
 
     public Set<Player> getPlayers() {
@@ -43,61 +47,80 @@ public class Match {
     }
 
     public boolean isMirroredMatch(final Match match) {
-        return this.hasTeam(match.getTeam1()) && this.hasTeam(match.getTeam2());
+        return this.hasTeam(match.getTeamA()) && this.hasTeam(match.getTeamB());
     }
 
     @Override
     public String toString() {
         return "Match(" +
-                this.team1 + " vs " + this.team2 +
+                this.getTeamA() + " vs " + this.getTeamB() +
                 ')';
     }
 
-    /**
-     * Finds game permutations where each player gets a chance to play every game
-     *
-     * @param teams    the possible teams
-     * @param players  all players available
-     * @param matchSet the current match set
-     * @param i        the current iteration
-     * @return a list of games playable by all players
-     */
-    public static List<Game> findGames(
-            final Set<Team> teams, final Set<Player> players, final Set<Match> matchSet, final int i) {
-        final List<Game> orderedGames = new ArrayList<>();
-        final Set<Player> usedPlayers = matchSet.stream()
-                .flatMap(m -> m.getPlayers().stream())
-                .collect(Collectors.toSet());
+    public static List<Match> teamBasedMatchOrdering(final List<Game> games, final List<Team> teams) {
+        final List<Match> matches = new ArrayList<>();
+        final List<Match> roundMatches = new ArrayList<>();
+        final LinkedList<Team> remainingTeams = new LinkedList<>();
+        final Set<Team> lastRoundTeams = new HashSet<>();
 
-        if (usedPlayers.containsAll(players)) {
-            orderedGames.add(new Game(matchSet));
-            return orderedGames;
-        }
+        Collections.shuffle(teams);
 
-        final List<Team> teamsWithUnusedPlayers = Team.getTeamsWithUnusedPlayers(teams, usedPlayers);
-        for (final Team team1 : teamsWithUnusedPlayers) {
-            for (final Team team2 : teamsWithUnusedPlayers) {
-                if (team1.equals(team2) || team1.hasPlayerFromTeam(team2)) {
-                    continue;
-                }
+        final Map<Team, Integer> playCount = new LinkedHashMap<>();
+        teams.forEach(t -> playCount.putIfAbsent(t, 0));
 
-                final Match match = new Match(team1, team2);
-                if (orderedGames.stream().noneMatch(game -> game.hasMatch(match))) {
-                    final LinkedHashSet<Match> subMatches = new LinkedHashSet<>(matchSet);
-                    subMatches.add(match);
+        while (!games.isEmpty()) {
+            final Comparator<Team> byPlayCount = Comparator.comparing(playCount::get);
 
-                    final List<Game> games = findGames(teams, players, subMatches, i + 1);
-                    if (!games.isEmpty()) {
-                        orderedGames.addAll(games);
-                    }
-                }
+            // get a set of fresh leastPlayedTeam if we ran out
+            if (remainingTeams.isEmpty()) {
+                remainingTeams.addAll(teams);
+                remainingTeams.sort(byPlayCount);
+
+                roundMatches.clear();
+            }
+
+            final Team leastPlayedTeam = remainingTeams.poll();
+            final Optional<Game> optionalGame = Game.findGameForTeam(
+                    leastPlayedTeam, lastRoundTeams, roundMatches, games);
+
+            optionalGame.ifPresent(game -> {
+                // update teams matches
+                matches.addAll(game.getMatches());
+                // update round matches
+                roundMatches.addAll(game.getMatches());
+
+                // update last round teams
+                lastRoundTeams.clear();
+                lastRoundTeams.addAll(game.getTeams());
+
+                // update play counts for each leastPlayedTeam
+                game.getTeams().forEach(playedTeam -> playCount.merge(playedTeam, 1, Integer::sum));
+
+                // remove game from set and update remainingTeams teams
+                remainingTeams.removeIf(game.getTeams()::contains);
+                games.remove(game);
+
+                // sort remainingTeams for next iteration based on play counts
+                remainingTeams.sort(byPlayCount);
+            });
+
+            if (remainingTeams.isEmpty() && roundMatches.isEmpty()) {
+                // infinite loop detection when nothing could be found
+                log.debug("No possible match found at {} remaining games", games.size());
+                break;
             }
         }
 
-        return orderedGames;
+        return matches;
     }
 
-    static void checkNextMatches(final List<Match> matches) {
+    public static Set<Team> getTeams(final Collection<Match> matches) {
+        return matches.stream()
+                .flatMap(match -> match.getTeams().stream())
+                .collect(Collectors.toSet());
+    }
+
+    public static void checkNextMatches(final List<Match> matches) {
         log.debug("Checking {} matches", matches.size());
         for (int i = 0; i < matches.size(); i++) {
             Match currentMatch = matches.get(i);

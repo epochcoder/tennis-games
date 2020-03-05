@@ -21,15 +21,18 @@
     </modules>
 
     <properties>
-        <openapi-generator-version>4.2.3</openapi-generator-version>
+        <guava.version>28.2-jre</guava.version>
+        <immutables.version>2.8.2</immutables.version>
+
         <jackson-databind-nullable.version>0.1.0</jackson-databind-nullable.version>
+        <openapi-generator-version>4.2.3</openapi-generator-version>
+        <jib-maven-plugin.version>2.1.0</jib-maven-plugin.version>
+
         <junit.jupiter.version>5.6.0</junit.jupiter.version>
         <mockito.version>3.0.0</mockito.version>
         <hamcrest.version>2.2</hamcrest.version>
-        <guava.version>28.2-jre</guava.version>
 
         <api.files.package>com.epochcoder.games.tennis.spec</api.files.package>
-        <jib-maven-plugin.version>2.1.0</jib-maven-plugin.version>
     </properties>
 
     <dependencyManagement>
@@ -46,6 +49,12 @@
                 <groupId>org.openapitools</groupId>
                 <artifactId>openapi-generator</artifactId>
                 <version>${openapi-generator-version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-simple</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
 
             <dependency>
@@ -58,6 +67,12 @@
                 <groupId>com.google.guava</groupId>
                 <artifactId>guava</artifactId>
                 <version>${guava.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.immutables</groupId>
+                <artifactId>value</artifactId>
+                <version>${immutables.version}</version>
             </dependency>
 
             <dependency>

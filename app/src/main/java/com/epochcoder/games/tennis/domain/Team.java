@@ -1,43 +1,38 @@
 package com.epochcoder.games.tennis.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.RequiredArgsConstructor;
+import org.immutables.value.Value.Immutable;
 
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Getter
-@EqualsAndHashCode
-@RequiredArgsConstructor
-public class Team {
+@Immutable
+public abstract class Team {
 
-    private final Player player1;
-    private final Player player2;
+    public abstract Player getPlayerA();
+
+    public abstract Player getPlayerB();
 
     public Set<Player> getPlayers() {
-        return Set.of(this.player1, this.player2);
+        return Set.of(this.getPlayerA(), this.getPlayerB());
     }
 
     public boolean hasPlayer(final Player player) {
-        return this.player1.equals(player) || this.player2.equals(player);
+        return this.getPlayers().contains(player);
     }
 
     public boolean isMirroredTeam(final Team otherTeam) {
-        return this.hasPlayer(otherTeam.getPlayer1()) && this.hasPlayer(otherTeam.getPlayer2());
+        return this.hasPlayer(otherTeam.getPlayerA()) && this.hasPlayer(otherTeam.getPlayerB());
     }
 
     public boolean hasPlayerFromTeam(final Team otherTeam) {
-        return this.hasPlayer(otherTeam.player1) || this.hasPlayer(otherTeam.player2);
+        return this.hasPlayer(otherTeam.getPlayerA()) || this.hasPlayer(otherTeam.getPlayerB());
     }
 
     @Override
     public String toString() {
-        return "Team(" + this.player1.getName() + "/" + this.player2.getName() + ")";
+        return "Team(" + this.getPlayerA().getName() + "/" + this.getPlayerB().getName() + ")";
     }
 
     public static Set<Team> makeTeams(final List<Player> set1, final List<Player> set2) {
@@ -53,8 +48,7 @@ public class Team {
                     throw new IllegalArgumentException("Same player in both sets");
                 }
 
-                final Team team = new Team(p1, p2);
-                teams.add(team);
+                teams.add(ImmutableTeam.builder().playerA(p1).playerB(p2).build());
             }
         }
 
@@ -67,26 +61,4 @@ public class Team {
                 .collect(Collectors.toList());
     }
 
-    static Set<Team> getTestTeams(int playerCount) {
-        final List<Player> guys;
-        final List<Player> girls;
-        if (playerCount == 0) {
-            guys = Player.toPlayers(Gender.MALE, "1", "2", "3", "4");
-            girls = Player.toPlayers(Gender.FEMALE, "A", "B", "C", "D");
-        } else if (playerCount == 1) {
-            guys = Player.toPlayers(Gender.MALE, "ER", "AN", "WA", "CH");
-            girls = Player.toPlayers(Gender.FEMALE, "EL", "GE", "IN", "SO");
-        } else if (playerCount == 4) {
-            guys = Player.toPlayers(Gender.MALE, "willie", "gabriel", "giovanni", "thiago");
-            girls = Player.toPlayers(Gender.FEMALE, "katrin", "sylvia", "elizibetha", "paula");
-        } else if (playerCount == 6) {
-            guys = Player.toPlayers(Gender.MALE, "willie", "gabriel", "giovanni", "thiago", "peter", "ernst");
-            girls = Player.toPlayers(Gender.FEMALE, "katrin", "sylvia", "elizibetha", "paula", "lilly", "laura");
-        } else {
-            guys = Player.toPlayers(Gender.MALE, "willie", "gabe");
-            girls = Player.toPlayers(Gender.FEMALE, "katrin", "syl");
-        }
-
-        return makeTeams(guys, girls);
-    }
 }

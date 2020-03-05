@@ -51,8 +51,8 @@
         </dependency>
 
         <dependency>
-            <groupId>org.projectlombok</groupId>
-            <artifactId>lombok</artifactId>
+            <groupId>org.immutables</groupId>
+            <artifactId>value</artifactId>
             <scope>provided</scope>
         </dependency>
 
