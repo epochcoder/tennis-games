@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Tennis Games</title>
+
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+        <link rel="stylesheet" href="css/bootstrap-reboot.css">
+        <link rel="stylesheet" href="css/bootstrap.css">
+
+        <script type="text/javascript " src="js/vue.js"></script>
+        <script type="text/javascript">
+
+            var app;
+            window.addEventListener('load', function () {
+
+                var url = 'http://localhost:8080/games?games=&courts=2&interval=WEEKS&men=willie&men=gabriel&men=thiago&men=giovanni&women=katrin&women=sylvia&women=paula&women=elizibetha';
+
+                Vue.component('match-player', {
+                    props: ['player'],
+                    computed: {
+                        classObject: function () {
+                            return {
+                                'male': this.player['gender'] === 'MALE',
+                                'female': this.player['gender'] === 'FEMALE'
+                            }
+                        },
+                        playerName: function () {
+                            return this.player.name.charAt(0).toUpperCase() + this.player.name.slice(1);
+                        }
+                    },
+                    template: '<span v-bind:class="classObject">{{ playerName }}</span>'
+                });
+
+                Vue.component('match-team', {
+                    props: ['team'],
+                    template: `
+                        <li class="team list-group-item">
+                            <match-player v-bind:player="team.playerA"/>
+                            <span>/</span>
+                            <match-player v-bind:player="team.playerB"/>
+                        </li>
+                    `
+                });
+
+                Vue.component('interval-match', {
+                    props: ['match'],
+                    template: `
+                        <div class="match card shadow-sm">
+                            <div class="card-header">
+                                <h3 class="court font-weight-normal">Court {{ match.court }}</h3>
+                            </div>
+                            <ul class="list-group list-group-flush">
+                                <match-team v-bind:team="match.teamA"></match-team>
+                                <match-team v-bind:team="match.teamB"></match-team>
+                            </ul>
+                        </div>
+                    `
+                });
+
+                function getGames() {
+                    fetch(url, {'mode': 'cors'}).then(function (res) {
+                        return res.json();
+                    }).then(function (games) {
+                        this.courts = games.courts;
+                        this.intervalType = games.intervalType;
+                        this.intervals = games.intervals;
+                    }.bind(this));
+                }
+
+                app = new Vue({
+                    el: '#app',
+                    data: {
+                        message: 'Hello Vue!',
+                        courts: 0,
+                        intervalType: '',
+                        intervals: []
+                    },
+
+                    methods: {
+                        getGames
+                    },
+
+                    mounted: function () {
+                        getGames.call(this);
+                    }
+                });
+            });
+
+        </script>
+    </head>
+
+    <body>
+        <div class="games py-5 bg-light">
+            <div id="app" class="container">
+
+                <div class="interval col" v-for="interval in intervals">
+                    <h4>{{ interval.date }}</h4>
+
+                    <div class="card-deck text-center">
+                        <interval-match v-bind:match="match" v-for="match in interval.matches"/>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </body>
+</html>

@@ -14,6 +14,7 @@ import org.modelmapper.TypeMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
@@ -38,6 +39,7 @@ public class GamesController implements GamesApi {
     }
 
     @Override
+    @CrossOrigin
     public ResponseEntity<GamesResponse> generateGames(
             @NotNull @Valid final Integer courts,
             @NotNull @Valid final MatchInterval matchInterval,
@@ -81,6 +83,7 @@ public class GamesController implements GamesApi {
                     i -> interval.getMatches().get(i).court(i + 1));
             response.addIntervalsItem(interval);
         }
+
         return response;
     }
 }
