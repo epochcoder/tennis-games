@@ -16,7 +16,7 @@
             var app;
             window.addEventListener('load', function () {
 
-                var url = 'http://localhost:8080/games?games=&courts=2&interval=WEEKS&men=willie&men=gabriel&men=thiago&men=giovanni&women=katrin&women=sylvia&women=paula&women=elizibetha';
+                var url = 'http://localhost:8080/games?games=21&courts=2&interval=WEEKS&men=willie&men=gabriel&men=thiago&men=giovanni&women=katrin&women=sylvia&women=paula&women=elizibetha';
 
                 Vue.component('match-player', {
                     props: ['player'],
@@ -50,7 +50,7 @@
                     template: `
                         <div class="match card shadow-sm">
                             <div class="card-header">
-                                <h3 class="court font-weight-normal">Court {{ match.court }}</h3>
+                                <h5 class="court m-0 font-weight-normal">Court {{ match.court }}</h5>
                             </div>
                             <ul class="list-group list-group-flush">
                                 <match-team v-bind:team="match.teamA"></match-team>
@@ -93,13 +93,13 @@
     </head>
 
     <body>
-        <div class="games py-5 bg-light">
-            <div id="app" class="container">
+        <div class="games py-5 container bg-light">
+            <div id="app" class="row">
 
-                <div class="interval col" v-for="interval in intervals">
+                <div class="interval text-center col-sm-12 col-md-6 col-lg-6 mb-3 p-2" v-for="interval in intervals">
                     <h4>{{ interval.date }}</h4>
 
-                    <div class="card-deck text-center">
+                    <div class="card-deck">
                         <interval-match v-bind:match="match" v-for="match in interval.matches"/>
                     </div>
                 </div>
