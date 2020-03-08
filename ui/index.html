@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" xmlns:v-on="http://www.w3.org/1999/xhtml">
     <head>
         <meta charset="utf-8">
         <title>Tennis Games</title>
@@ -10,13 +10,21 @@
         <link rel="stylesheet" href="css/bootstrap-reboot.css">
         <link rel="stylesheet" href="css/bootstrap.css">
 
+        <style type="text/css">
+
+            span.male {
+                color: deepskyblue;
+            }
+
+            span.female {
+                color: hotpink;
+            }
+        </style>
+
         <script type="text/javascript " src="js/vue.js"></script>
         <script type="text/javascript">
 
-            var app;
             window.addEventListener('load', function () {
-
-                var url = 'http://localhost:8080/games?games=21&courts=2&interval=WEEKS&men=willie&men=gabriel&men=thiago&men=giovanni&women=katrin&women=sylvia&women=paula&women=elizibetha';
 
                 Vue.component('match-player', {
                     props: ['player'],
@@ -60,9 +68,34 @@
                     `
                 });
 
+                Vue.component('game-interval', {
+                    props: ['interval'],
+                    template: `
+                        <div class="interval text-center col-sm-12 col-md-6 col-lg-6 mb-3 p-2">
+                            <h4>{{ interval.date }}</h4>
+                            <div class="card-deck">
+                                <interval-match v-bind:match="match" v-bind:key="match.court" v-for="match in interval.matches"></interval-match>
+                            </div>
+                        </div>
+                    `
+                });
+
                 function getGames() {
+                    let url = `${this.host}/games/?interval=${this.intervalType}&games=${this.games}&courts=${this.courts}`;
+                    url += `&men=${this.men.join('&men=')}`;
+                    url += `&women=${this.women.join('&women=')}`;
+
                     fetch(url, {'mode': 'cors'}).then(function (res) {
-                        return res.json();
+                        return {
+                            error: !res.ok,
+                            json: res.json()
+                        }
+                    }).then(function(res) {
+                        if (res.error) {
+                            return res.json
+                        }
+
+                        return res.json;
                     }).then(function (games) {
                         this.courts = games.courts;
                         this.intervalType = games.intervalType;
@@ -73,18 +106,46 @@
                 app = new Vue({
                     el: '#app',
                     data: {
-                        message: 'Hello Vue!',
-                        courts: 0,
-                        intervalType: '',
-                        intervals: []
+                        intervals: [],
+
+                        host: 'http://localhost:8080',
+                        intervalType: 'WEEKS',
+                        games: 21,
+                        courts: 2,
+
+                        men: ['1', '2', '3', '4'],
+                        women: ['A', 'B', 'C', 'D']
+                    },
+
+                    computed: {
+                        hasGames: function () {
+                            return this.intervals && this.intervals.length > 0;
+                        },
+
+                        womenArea: {
+                            get: function () {
+                                return this.women.join('\n');
+                            },
+                            set: function (newValue) {
+                                this.women = newValue.split('\n');
+                            }
+                        },
+
+                        menArea: {
+                            get: function () {
+                                return this.men.join('\n');
+                            },
+                            set: function (newValue) {
+                                this.men = newValue.split('\n');
+                            }
+                        }
                     },
 
                     methods: {
-                        getGames
-                    },
-
-                    mounted: function () {
-                        getGames.call(this);
+                        getGames,
+                        resetGame: function () {
+                            this.intervals = [];
+                        }
                     }
                 });
             });
@@ -93,17 +154,55 @@
     </head>
 
     <body>
-        <div class="games py-5 container bg-light">
-            <div id="app" class="row">
+        <div class="container" id="app">
 
-                <div class="interval text-center col-sm-12 col-md-6 col-lg-6 mb-3 p-2" v-for="interval in intervals">
-                    <h4>{{ interval.date }}</h4>
+            <nav class="navbar navbar-light bg-light rounded">
+                <a class="navbar-brand" href="#">Tennis Games</a>
+                <form class="form-inline my-2 my-lg-0">
+                    <button class="btn btn-outline-success my-2 my-sm-0" type="button" v-on:click="resetGame">New game</button>
+                </form>
+            </nav>
 
-                    <div class="card-deck">
-                        <interval-match v-bind:match="match" v-for="match in interval.matches"/>
+            <div class="jumbotron mt-3" v-if="!hasGames">
+                <h1 class="display-4">Couple match generator</h1>
+                <p class="lead">Create a new game schedule</p>
+                <form>
+                    <div class="form-group">
+                        <label for="games">Games</label>
+                        <input type="text" class="form-control" v-model="games" id="games">
                     </div>
-                </div>
+                    <div class="form-group">
+                        <label for="courts">Courts</label>
+                        <input type="text" class="form-control" v-model="courts" id="courts">
+                    </div>
+                    <div class="form-group">
+                        <label for="intervalType">Interval Type</label>
+                        <select class="form-control" id="intervalType" v-model="intervalType">
+                            <option value="DAYS">DAILY</option>
+                            <option value="WEEKS">WEEKLY</option>
+                            <option value="MONTHS">MONTHLY</option>
+                        </select>
+                    </div>
+                    <div class="row">
+                        <div class="form-group col-md-6">
+                            <label for="men">Men</label>
+                            <textarea v-model="menArea" class="form-control" id="men" rows="4"></textarea>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="women">Women</label>
+                            <textarea v-model="womenArea" class="form-control" id="women" rows="4"></textarea>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <button class="btn btn-dark" type="button" v-on:click="getGames">Generate</button>
+                    </div>
+                </form>
+            </div>
 
+            <div class="games py-3" v-if="hasGames">
+                <div class="row">
+                    <game-interval v-bind:interval="interval" v-bind:key="interval.id" v-for="interval in intervals"></game-interval>
+                </div>
             </div>
         </div>
     </body>

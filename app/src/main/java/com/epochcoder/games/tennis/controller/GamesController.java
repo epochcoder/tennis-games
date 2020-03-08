@@ -22,6 +22,7 @@ import javax.validation.constraints.NotNull;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.IntStream;
 
 @RestController
@@ -76,7 +77,8 @@ public class GamesController implements GamesApi {
         response.setCourts(courts);
 
         for (GameDay gameDay : gameDays) {
-            final Interval interval = new Interval();
+            final Interval interval = new Interval()
+                    .id(UUID.randomUUID());
             MAPPER.map(gameDay, interval);
 
             IntStream.range(0, courts).forEach(

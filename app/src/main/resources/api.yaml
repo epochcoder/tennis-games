@@ -109,6 +109,9 @@ components:
         - date
         - matches
       properties:
+        id:
+          type: string
+          format: uuid
         date:
           type: string
           format: date
