@@ -86,16 +86,7 @@
                     url += `&women=${this.women.join('&women=')}`;
 
                     fetch(url, {'mode': 'cors'}).then(function (res) {
-                        return {
-                            error: !res.ok,
-                            json: res.json()
-                        }
-                    }).then(function(res) {
-                        if (res.error) {
-                            return res.json
-                        }
-
-                        return res.json;
+                        return res.json();
                     }).then(function (games) {
                         this.courts = games.courts;
                         this.intervalType = games.intervalType;
@@ -178,7 +169,6 @@
                     <div class="form-group">
                         <label for="intervalType">Interval Type</label>
                         <select class="form-control" id="intervalType" v-model="intervalType">
-                            <option value="DAYS">DAILY</option>
                             <option value="WEEKS">WEEKLY</option>
                             <option value="MONTHS">MONTHLY</option>
                         </select>
