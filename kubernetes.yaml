@@ -1,0 +1,41 @@
+---
+apiVersion: "apps/v1"
+kind: "Deployment"
+metadata:
+  name: "tennis-games-service"
+  namespace: "default"
+  labels:
+    app: "tennis-games-service"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: "tennis-games-service"
+  template:
+    metadata:
+      labels:
+        app: "tennis-games-service"
+    spec:
+      containers:
+        - name: "tennis-games-service-1"
+          image: "eu.gcr.io/perfect-operand-270607/tennis-games-service:latest"
+---
+apiVersion: "autoscaling/v2beta1"
+kind: "HorizontalPodAutoscaler"
+metadata:
+  name: "tennis-games-service-hpa-k96s"
+  namespace: "default"
+  labels:
+    app: "tennis-games-service"
+spec:
+  scaleTargetRef:
+    kind: "Deployment"
+    name: "tennis-games-service"
+    apiVersion: "apps/v1"
+  minReplicas: 1
+  maxReplicas: 5
+  metrics:
+    - type: "Resource"
+      resource:
+        name: "cpu"
+        targetAverageUtilization: 80

@@ -33,6 +33,7 @@
         <hamcrest.version>2.2</hamcrest.version>
 
         <api.files.package>com.epochcoder.games.tennis.spec</api.files.package>
+        <PROJECT_ID>tennis-games</PROJECT_ID>
     </properties>
 
     <dependencyManagement>
