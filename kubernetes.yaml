@@ -7,23 +7,51 @@ metadata:
   labels:
     app: "tennis-games-service"
 spec:
-  replicas: 3
+  replicas: 2
   selector:
     matchLabels:
       app: "tennis-games-service"
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 25%
+      maxUnavailable: 25%
   template:
     metadata:
       labels:
         app: "tennis-games-service"
     spec:
       containers:
-        - name: "tennis-games-service-1"
-          image: "eu.gcr.io/perfect-operand-270607/tennis-games-service:latest"
+        - name: "tennis-games-service"
+          image: "eu.gcr.io/tennis-games/tennis-games-service:latest"
+          imagePullPolicy: Always
+          livenessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 7
+          readinessProbe:
+            failureThreshold: 3
+            httpGet:
+              path: /actuator/health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10
+            timeoutSeconds: 7
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: cloud
 ---
 apiVersion: "autoscaling/v2beta1"
 kind: "HorizontalPodAutoscaler"
 metadata:
-  name: "tennis-games-service-hpa-k96s"
+  name: "tennis-games-service-hpa"
   namespace: "default"
   labels:
     app: "tennis-games-service"
@@ -33,7 +61,7 @@ spec:
     name: "tennis-games-service"
     apiVersion: "apps/v1"
   minReplicas: 1
-  maxReplicas: 5
+  maxReplicas: 3
   metrics:
     - type: "Resource"
       resource:
