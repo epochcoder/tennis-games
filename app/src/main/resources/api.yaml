@@ -33,18 +33,18 @@ paths:
           description: over which interval should the games be spread
           schema:
             $ref: '#/components/schemas/MatchInterval'
-        - name: men
+        - name: groupA
           in: query
           required: true
-          description: the unique names of all the male players
+          description: the unique names of all the group A players
           schema:
             type: array
             items:
               type: string
-        - name: women
+        - name: groupB
           in: query
           required: true
-          description: the unique names of all the female players
+          description: the unique names of all the group B players
           schema:
             type: array
             items:
@@ -63,15 +63,15 @@ components:
       type: object
       required:
         - name
-        - gender
+        - group
       properties:
         name:
           type: string
-        gender:
+        group:
           type: string
           enum:
-            - MALE
-            - FEMALE
+            - A
+            - B
 
     TeamView:
       type: object

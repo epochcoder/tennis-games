@@ -1,8 +1,8 @@
 package com.epochcoder.games.tennis.controller;
 
 import com.epochcoder.games.tennis.domain.GameDay;
-import com.epochcoder.games.tennis.domain.Gender;
 import com.epochcoder.games.tennis.domain.Player;
+import com.epochcoder.games.tennis.domain.PlayerGroup;
 import com.epochcoder.games.tennis.domain.Team;
 import com.epochcoder.games.tennis.spec.handler.GamesApi;
 import com.epochcoder.games.tennis.spec.model.GamesResponse;
@@ -49,8 +49,8 @@ public class GamesController implements GamesApi {
             @Valid final Integer games) {
         final long start = System.currentTimeMillis();
 
-        final List<Player> malePlayers = Player.toPlayers(Gender.MALE, men.toArray(new String[0]));
-        final List<Player> femalePlayers = Player.toPlayers(Gender.FEMALE, women.toArray(new String[0]));
+        final List<Player> malePlayers = Player.toPlayers(PlayerGroup.A, men.toArray(new String[0]));
+        final List<Player> femalePlayers = Player.toPlayers(PlayerGroup.B, women.toArray(new String[0]));
 
         if (malePlayers.size() > MAX_PLAYERS_PER_TEAM || femalePlayers.size() > MAX_PLAYERS_PER_TEAM) {
             return ResponseEntity.badRequest().build();

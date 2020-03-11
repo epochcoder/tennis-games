@@ -12,12 +12,12 @@
 
         <style type="text/css">
 
-            span.male {
+            span.group-a {
                 color: deepskyblue;
             }
 
-            span.female {
-                color: hotpink;
+            span.group-b {
+                color: indianred;
             }
 
         </style>
@@ -32,8 +32,8 @@
                     computed: {
                         classObject: function () {
                             return {
-                                'male': this.player['gender'] === 'MALE',
-                                'female': this.player['gender'] === 'FEMALE'
+                                'group-a': this.player['group'] === 'A',
+                                'group-b': this.player['group'] === 'B'
                             }
                         },
                         playerName: function () {
@@ -83,16 +83,23 @@
 
                 function getGames() {
                     let url = `${this.host}/games/?interval=${this.intervalType}&games=${this.games}&courts=${this.courts}`;
-                    url += `&men=${this.men.join('&men=')}`;
-                    url += `&women=${this.women.join('&women=')}`;
+                    url += `&groupA=${this.groupA.join('&groupA=')}`;
+                    url += `&groupB=${this.groupB.join('&groupB=')}`;
 
-                    fetch(url, {'mode': 'cors'}).then(function (res) {
-                        return res.json();
-                    }).then(function (games) {
-                        this.courts = games.courts;
-                        this.intervalType = games.intervalType;
-                        this.intervals = games.intervals;
-                    }.bind(this));
+                    fetch(url, {'mode': 'cors'})
+                        .then(response => Promise.all([response.ok, response.json()]))
+                        .then(function(resp) {
+                            let responseOk = resp[0];
+                            let jsonBody = resp[1];
+                            if (responseOk) {
+                                this.updateGames(jsonBody)
+                            } else {
+                                throw jsonBody;
+                            }
+                        }.bind(this))
+                        .catch(function (error) {
+                            this.error = error.message || 'Unknown Error';
+                        }.bind(this));
                 }
 
                 app = new Vue({
@@ -105,8 +112,10 @@
                         games: 21,
                         courts: 2,
 
-                        men: ['1', '2', '3', '4'],
-                        women: ['A', 'B', 'C', 'D']
+                        groupA: ['1', '2', '3', '4'],
+                        groupB: ['A', 'B', 'C', 'D'],
+
+                        error: ''
                     },
 
                     computed: {
@@ -114,27 +123,34 @@
                             return this.intervals && this.intervals.length > 0;
                         },
 
-                        womenArea: {
+                        groupAArea: {
                             get: function () {
-                                return this.women.join('\n');
+                                return this.groupA.join('\n');
                             },
                             set: function (newValue) {
-                                this.women = newValue.split('\n');
+                                this.groupA = newValue.split('\n');
                             }
                         },
 
-                        menArea: {
+                        groupBArea: {
                             get: function () {
-                                return this.men.join('\n');
+                                return this.groupB.join('\n');
                             },
                             set: function (newValue) {
-                                this.men = newValue.split('\n');
+                                this.groupB = newValue.split('\n');
                             }
                         }
                     },
 
                     methods: {
                         getGames,
+                        updateGames: function (games) {
+                            this.error = '';
+                            console.log(games);
+                            this.courts = games.courts;
+                            this.intervalType = games.intervalType;
+                            this.intervals = games.intervals;
+                        },
                         resetGame: function () {
                             this.intervals = [];
                         }
@@ -159,6 +175,11 @@
                 <h1 class="display-4">Couple match generator</h1>
                 <p class="lead">Create a new game schedule</p>
                 <form>
+                    <div class="row" v-if="error">
+                        <div class="col-md-12">
+                            <div class="alert alert-danger">{{ error }}</div>
+                        </div>
+                    </div>
                     <div class="form-group">
                         <label for="games">Games</label>
                         <input type="text" class="form-control" v-model="games" id="games">
@@ -176,12 +197,17 @@
                     </div>
                     <div class="row">
                         <div class="form-group col-md-6">
-                            <label for="men">Men</label>
-                            <textarea v-model="menArea" class="form-control" id="men" rows="4"></textarea>
+                            <label for="groupA">Group A</label>
+                            <textarea v-model="groupAArea" class="form-control" id="groupA" rows="4"></textarea>
                         </div>
                         <div class="form-group col-md-6">
-                            <label for="women">Women</label>
-                            <textarea v-model="womenArea" class="form-control" id="women" rows="4"></textarea>
+                            <label for="groupB">Group B</label>
+                            <textarea v-model="groupBArea" class="form-control" id="groupB" rows="4"></textarea>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12">
+                            <div class="alert alert-dark">Players from the same groups will never be together on a team</div>
                         </div>
                     </div>
                     <div class="form-group">

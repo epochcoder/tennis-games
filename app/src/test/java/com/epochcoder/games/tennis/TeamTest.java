@@ -1,9 +1,9 @@
 package com.epochcoder.games.tennis;
 
-import com.epochcoder.games.tennis.domain.Gender;
 import com.epochcoder.games.tennis.domain.ImmutablePlayer;
 import com.epochcoder.games.tennis.domain.ImmutableTeam;
 import com.epochcoder.games.tennis.domain.Player;
+import com.epochcoder.games.tennis.domain.PlayerGroup;
 import com.epochcoder.games.tennis.domain.Team;
 import org.junit.jupiter.api.Test;
 
@@ -18,8 +18,8 @@ class TeamTest {
 
     @Test
     void equalsTest() {
-        final Player player1 = this.createPlayer(Gender.MALE);
-        final Player player2 = this.createPlayer(Gender.FEMALE);
+        final Player player1 = this.createPlayer(PlayerGroup.A);
+        final Player player2 = this.createPlayer(PlayerGroup.B);
 
         final Team team = createTeam(player1, player2);
         final Team same = createTeam(player1, player2);
@@ -30,20 +30,20 @@ class TeamTest {
 
     @Test
     void hasPlayer() {
-        final Player player1 = this.createPlayer(Gender.MALE);
-        final Player player2 = this.createPlayer(Gender.FEMALE);
+        final Player player1 = this.createPlayer(PlayerGroup.A);
+        final Player player2 = this.createPlayer(PlayerGroup.B);
 
         final Team team = createTeam(player1, player2);
         assertTrue(team.hasPlayer(player1));
         assertTrue(team.hasPlayer(player2));
-        assertFalse(team.hasPlayer(this.createPlayer(Gender.FEMALE)));
+        assertFalse(team.hasPlayer(this.createPlayer(PlayerGroup.B)));
     }
 
     @Test
     void isMirroredTeam() {
-        final Player player1 = this.createPlayer(Gender.MALE);
-        final Player player2 = this.createPlayer(Gender.FEMALE);
-        final Player player3 = this.createPlayer(Gender.FEMALE);
+        final Player player1 = this.createPlayer(PlayerGroup.A);
+        final Player player2 = this.createPlayer(PlayerGroup.B);
+        final Player player3 = this.createPlayer(PlayerGroup.B);
 
         final Team team = createTeam(player1, player2);
         final Team swapped = createTeam(player2, player1);
@@ -57,10 +57,10 @@ class TeamTest {
 
     @Test
     void hasPlayerFromTeam() {
-        final Player player1 = this.createPlayer(Gender.MALE);
-        final Player player2 = this.createPlayer(Gender.FEMALE);
-        final Player player3 = this.createPlayer(Gender.FEMALE);
-        final Player player4 = this.createPlayer(Gender.MALE);
+        final Player player1 = this.createPlayer(PlayerGroup.A);
+        final Player player2 = this.createPlayer(PlayerGroup.B);
+        final Player player3 = this.createPlayer(PlayerGroup.B);
+        final Player player4 = this.createPlayer(PlayerGroup.A);
 
         final Team team = createTeam(player1, player2);
         final Team swapped = createTeam(player2, player1);
@@ -77,10 +77,10 @@ class TeamTest {
         assertFalse(noMatch.hasPlayerFromTeam(swapped));
     }
 
-    private Player createPlayer(final Gender gender) {
+    private Player createPlayer(final PlayerGroup playerGroup) {
         return ImmutablePlayer.builder()
                 .name(UUID.randomUUID().toString())
-                .gender(gender)
+                .playerGroup(playerGroup)
                 .build();
     }
 

@@ -13,11 +13,14 @@ public abstract class Player {
 
     public abstract String getName();
 
-    public abstract Gender getGender();
+    public abstract PlayerGroup getPlayerGroup();
 
-    public static List<Player> toPlayers(final Gender gender, final String... names) {
+    public static List<Player> toPlayers(final PlayerGroup playerGroup, final String... names) {
         return Arrays.stream(names)
-                .map(name -> ImmutablePlayer.builder().gender(gender).name(name).build())
+                .map(name -> ImmutablePlayer.builder()
+                        .playerGroup(playerGroup)
+                        .name(name)
+                        .build())
                 .sorted(Comparator.comparing(Player::getName))
                 .collect(Collectors.toUnmodifiableList());
     }
