@@ -7,8 +7,8 @@
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-        <link rel="stylesheet" href="css/bootstrap-reboot.css">
-        <link rel="stylesheet" href="css/bootstrap.css">
+        <link rel="stylesheet" href="css/bootstrap-reboot.min.css">
+        <link rel="stylesheet" href="css/bootstrap.min.css">
 
         <style type="text/css">
 
@@ -22,11 +22,11 @@
 
         </style>
 
-        <script type="text/javascript " src="js/vue.js"></script>
+        <script type="text/javascript " src="js/vue.min.js"></script>
         <script type="text/javascript">
 
+            const PROD = true;
             window.addEventListener('load', function () {
-
                 Vue.component('match-player', {
                     props: ['player'],
                     computed: {
@@ -42,7 +42,6 @@
                     },
                     template: '<span v-bind:class="classObject">{{ playerName }}</span>'
                 });
-
                 Vue.component('match-team', {
                     props: ['team'],
                     template: `
@@ -53,7 +52,6 @@
                         </li>
                     `
                 });
-
                 Vue.component('interval-match', {
                     props: ['match'],
                     template: `
@@ -68,7 +66,6 @@
                         </div>
                     `
                 });
-
                 Vue.component('game-interval', {
                     props: ['interval'],
                     template: `
@@ -82,11 +79,11 @@
                 });
 
                 function getGames() {
-                    let url = `${this.host}/games/?interval=${this.intervalType}&games=${this.games}&courts=${this.courts}`;
+                    let url = `${this.host}/games?interval=${this.intervalType}&games=${this.games}&courts=${this.courts}`;
                     url += `&groupA=${this.groupA.join('&groupA=')}`;
                     url += `&groupB=${this.groupB.join('&groupB=')}`;
 
-                    fetch(url, {'mode': 'cors'})
+                    fetch(url, {'mode': 'cors', 'redirect': 'follow'})
                         .then(response => Promise.all([response.ok, response.json()]))
                         .then(function(resp) {
                             let responseOk = resp[0];
@@ -107,7 +104,7 @@
                     data: {
                         intervals: [],
 
-                        host: 'http://localhost:8080',
+                        host: PROD ? 'https://tennis-api.endpoints.tennis-games.cloud.goog' : 'http://localhost:8080',
                         intervalType: 'WEEKS',
                         games: 21,
                         courts: 2,
@@ -221,6 +218,12 @@
                     <game-interval v-bind:interval="interval" v-bind:key="interval.id" v-for="interval in intervals"></game-interval>
                 </div>
             </div>
+
+            <footer class="text-muted">
+                <div class="container-fluid p-3 p-md-5">
+                    <p>Built by Willie (willie scholtz at gmail) for Großmutti</p>
+                </div>
+            </footer>
         </div>
     </body>
 </html>

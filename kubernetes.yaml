@@ -22,6 +22,15 @@ spec:
         app: "tennis-games-service"
     spec:
       containers:
+        - name: esp
+          image: gcr.io/endpoints-release/endpoints-runtime:1
+          args: [
+            "--http_port=8081",
+            "--backend=127.0.0.1:8080",
+            "--service=tennis-api.endpoints.tennis-games.cloud.goog",
+            "--rollout_strategy=managed",
+            "--dns=169.254.169.254"
+          ]
         - name: "tennis-games-service"
           image: "eu.gcr.io/tennis-games/tennis-games-service:latest"
           imagePullPolicy: Always
@@ -42,11 +51,49 @@ spec:
             periodSeconds: 10
             timeoutSeconds: 7
           ports:
-            - containerPort: 8080
-              name: http
+            - containerPort: 8081
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: cloud
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: tennis-games-service
+  namespace: default
+spec:
+  type: NodePort
+  selector:
+    app: tennis-games-service
+  ports:
+    - protocol: TCP
+      port: 8081
+      targetPort: 8081
+---
+apiVersion: networking.k8s.io/v1beta1
+kind: Ingress
+metadata:
+  name: tennis-games-ingress
+  namespace: default
+  annotations:
+    kubernetes.io/ingress.global-static-ip-name: tennis-games-service-ip
+    certmanager.k8s.io/cluster-issuer: letsencrypt-prod
+    certmanager.k8s.io/acme-http01-edit-in-place: "true"
+  labels:
+    app: tennis-games-service
+spec:
+  tls:
+    - secretName: tennis-api-endpoints-tls
+      hosts:
+        - tennis-api.endpoints.tennis-games.cloud.goog
+  rules:
+    - host: tennis-api.endpoints.tennis-games.cloud.goog
+      http:
+        paths:
+          - path: /*
+            backend:
+              serviceName: tennis-games-service
+              servicePort: 8081
 ---
 apiVersion: "autoscaling/v2beta1"
 kind: "HorizontalPodAutoscaler"

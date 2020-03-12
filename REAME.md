@@ -30,3 +30,36 @@ Config
     
     kubectl apply -f kubernetes.yaml
     
+Cloud Endpoints
+
+* Generate swagger.json from api.yaml
+* `gcloud endpoints services deploy swagger.json` 
+* Ensure container runtime configured in kubernetes
+
+    
+## Reference gcloud
+
+Global IP
+
+    gcloud compute addresses create tennis-games-service-ip --global
+     gcloud compute addresses describe tennis-games-service-ip --global --format 'value(address)'
+
+Deploy Services
+
+    gcloud endpoints services deploy swagger.json
+    
+## Firebase
+
+* Serve local
+
+      cd ui && firebase serve --only hosting
+      
+* Prod deploy
+
+      cd ui && firebase deploy
+
+
+## References
+
+* [Cloud endpoints](https://cloud.google.com/endpoints/docs/openapi/get-started-kubernetes-engine)
+* [GKE lets encrypt](https://github.com/ahmetb/gke-letsencrypt)
