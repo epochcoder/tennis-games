@@ -57,9 +57,30 @@ Deploy Services
 * Prod deploy
 
       cd ui && firebase deploy
+      
+      
+* Create Cluster issuer (after cert-manager install)
 
+```
+cat << EOF| kubectl create -n ingress -f -
+apiVersion: cert-manager.io/v1alpha2
+kind: ClusterIssuer
+metadata:
+  name: letsencrypt-prod
+spec:
+  acme:
+    server: https://acme-v02.api.letsencrypt.org/directory
+    email: williescholtz@gmail.com
+    privateKeySecretRef:
+      name: letsencrypt-prod
+    solvers:
+    - http01:
+       ingress:
+         class: nginx
+EOF
+```
 
 ## References
 
 * [Cloud endpoints](https://cloud.google.com/endpoints/docs/openapi/get-started-kubernetes-engine)
-* [GKE lets encrypt](https://github.com/ahmetb/gke-letsencrypt)
+* [Cert manager](https://cert-manager.io/)
