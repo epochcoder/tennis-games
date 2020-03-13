@@ -34,6 +34,10 @@ public abstract class GameDay {
                 new LinkedHashSet<>(0),
                 0);
 
+        if (games.isEmpty()) {
+            throw new IllegalStateException("Could not generate games");
+        }
+
         // possible to shuffle since our sets are complete
         Collections.shuffle(games);
 

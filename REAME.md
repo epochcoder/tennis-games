@@ -110,6 +110,10 @@ How to rollout a new version of backend and frontend
 
 ## Firebase
 
+* Build & Deploy
+
+      yarn deploy
+
 * Serve local
 
       cd ui && firebase serve --only hosting
