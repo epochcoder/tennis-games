@@ -8,7 +8,7 @@ host: tennis-api.endpoints.tennis-games.cloud.goog
 x-google-endpoints:
   - name: tennis-api.endpoints.tennis-games.cloud.goog
     allowCors: true
-    target: 34.107.249.49
+    target: 35.205.70.155
 x-google-allow: all
 paths:
   "/games":

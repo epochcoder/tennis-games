@@ -3,12 +3,13 @@ apiVersion: networking.k8s.io/v1beta1
 kind: Ingress
 metadata:
   annotations:
+    # use the shared ingress-nginx
+    kubernetes.io/ingress.class: "nginx"
     # add an annotation indicating the issuer to use.
     cert-manager.io/cluster-issuer: letsencrypt-prod
     # https://cert-manager.io/docs/usage/ingress/
     acme.cert-manager.io/http01-edit-in-place: "true"
     kubernetes.io/tls-acme: "true"
-    kubernetes.io/ingress.global-static-ip-name: tennis-games-service-ip
   name: tennis-games-ingress
   namespace: default
   labels:
@@ -18,10 +19,10 @@ spec:
     - host: tennis-api.endpoints.tennis-games.cloud.goog
       http:
         paths:
-          - backend:
+          - path: /
+            backend:
               serviceName: tennis-games-service
-              servicePort: 8088
-            path: /
+              servicePort: gamehttp
   tls: # < placing a host in the TLS config will indicate a certificate should be created
     - hosts:
         - tennis-api.endpoints.tennis-games.cloud.goog
@@ -33,22 +34,20 @@ metadata:
   name: tennis-games-service
   namespace: default
 spec:
-  type: NodePort
   ports:
-    - protocol: TCP
-      name: http
+    - name: gamehttp
       port: 8088
+      protocol: TCP
       targetPort: 8081
   selector:
     app: tennis-games-service
+  type: NodePort
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: tennis-games-service
   namespace: default
-  labels:
-    app: tennis-games-service
 spec:
   replicas: 1
   selector:

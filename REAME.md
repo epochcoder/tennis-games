@@ -39,27 +39,10 @@ Cloud Endpoints
     
 ## Reference gcloud
 
-Global IP
+### Prerequisites
 
-    gcloud compute addresses create tennis-games-service-ip --global
-     gcloud compute addresses describe tennis-games-service-ip --global --format 'value(address)'
-
-Deploy Services
-
-    gcloud endpoints services deploy swagger.json
-    
-## Firebase
-
-* Serve local
-
-      cd ui && firebase serve --only hosting
-      
-* Prod deploy
-
-      cd ui && firebase deploy
-      
-      
-* Create Cluster issuer (after cert-manager install)
+* Install `cert-manager`
+* Create Cluster issuer
 
 ```
 cat << EOF| kubectl create -n ingress -f -
@@ -80,7 +63,53 @@ spec:
 EOF
 ```
 
+* Install `nginx-ingress`
+* Verify installation
+      
+      k get all --namespace ingress-nginx --watch
+
+### Configure static IP for nginx controller
+
+* Without `loadBalancerIp` specified (`type=LoadBalancer` will reserve address):
+        
+      k apply -f nginx-service.yaml
+      k get svc ingress-nginx --namespace ingress-nginx --watch
+       
+* When assigned, promote to static: 
+
+      kubectl patch svc ingress-nginx -p '{"spec": {"loadBalancerIP": "35.205.70.155"}}' --namespace ingress-nginx
+      gcloud compute addresses create ingress-nginx-ip --addresses 35.205.70.155 --region europe-west1  
+      gcloud compute addresses describe ingress-nginx-ip --region europe-west1 --format 'value(address)'
+
+* Update `swagger.yaml` with IP so cloud endpoints dns know about it
+
+      cd app/src/main/resources && gcloud endpoints services deploy swagger.yaml
+      
+### Install Tennis games service on cluster 
+
+    k apply -f kubernetes.yaml
+    
+Wait for ingress
+
+    k get ing tennis-games-ingress --watch
+    k describe ing tennis-games-ingress
+    
+Verify 
+
+    curl https://tennis-api.endpoints.tennis-games.cloud.goog
+    
+## Firebase
+
+* Serve local
+
+      cd ui && firebase serve --only hosting
+      
+* Prod deploy
+
+      cd ui && firebase deploy
+      
 ## References
 
 * [Cloud endpoints](https://cloud.google.com/endpoints/docs/openapi/get-started-kubernetes-engine)
 * [Cert manager](https://cert-manager.io/)
+* [NGINX Ingress](https://kubernetes.github.io/ingress-nginx/deploy/)
