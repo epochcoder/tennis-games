@@ -98,6 +98,16 @@ Verify
 
     curl https://tennis-api.endpoints.tennis-games.cloud.goog
     
+# Deployment
+
+How to rollout a new version of backend and frontend
+
+## Backend
+
+* `mvn clean install`
+* `mvn jib:build`
+* `k rollout restart deployment/tennis-games-service`
+
 ## Firebase
 
 * Serve local
