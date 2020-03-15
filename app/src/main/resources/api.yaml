@@ -1,14 +1,18 @@
-openapi: 3.0.2
+swagger: '2.0'
 
 info:
   title: Tennis Service
   version: 1.0.0
-  description: >-
-    The tennis service allows games to be generated for male/female duo's
+  description: The tennis service allows games to be generated for male/female duo's
 
-servers:
-  - url: http://localhost:8080
-    description: local
+host: tennis-api.endpoints.tennis-games.cloud.goog
+
+# https://cloud.google.com/endpoints/docs/openapi/openapi-extensions
+x-google-allow: all
+x-google-endpoints:
+  - name: tennis-api.endpoints.tennis-games.cloud.goog
+    allowCors: true
+    target: 35.205.70.155
 
 paths:
   /games:
@@ -19,120 +23,113 @@ paths:
         - name: games
           in: query
           description: the amount of games to generate, defaults to all
-          schema:
-            type: integer
+          type: integer
         - name: courts
           in: query
           required: true
           description: the amount of playable courts
-          schema:
-            type: integer
+          type: integer
         - name: interval
           in: query
           required: true
-          description: over which interval should the games be spread
-          schema:
-            $ref: '#/components/schemas/MatchInterval'
+          description: The interval over which the games are spread
+          type: string
+        - name: date
+          in: query
+          required: false
+          description: The first date at which matches should start per interval
+          type: string
+          format: date
         - name: groupA
           in: query
           required: true
           description: the unique names of all the group A players
-          schema:
-            type: array
-            items:
-              type: string
+          type: array
+          items:
+            type: string
         - name: groupB
           in: query
           required: true
           description: the unique names of all the group B players
-          schema:
-            type: array
-            items:
-              type: string
+          type: array
+          items:
+            type: string
+      produces:
+        - application/json
       responses:
         '200':
-          description: ok
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/GamesResponse'
-components:
-  schemas:
+          description: A list of games to be played
+          schema:
+            $ref: "#/definitions/GamesResponse"
 
-    PlayerView:
-      type: object
-      required:
-        - name
-        - group
-      properties:
-        name:
-          type: string
-        group:
-          type: string
-          enum:
-            - A
-            - B
+definitions:
 
-    TeamView:
-      type: object
-      required:
-        - playerA
-        - playerB
-      properties:
-        playerA:
-          $ref: '#/components/schemas/PlayerView'
-        playerB:
-          $ref: '#/components/schemas/PlayerView'
+  PlayerView:
+    type: object
+    required:
+      - name
+      - group
+    properties:
+      name:
+        type: string
+      group:
+        type: string
+        enum:
+          - A
+          - B
 
-    MatchInterval:
-      type: string
-      enum:
-        - WEEKS
-        - MONTHS
+  TeamView:
+    type: object
+    required:
+      - playerA
+      - playerB
+    properties:
+      playerA:
+        $ref: "#/definitions/PlayerView"
+      playerB:
+        $ref: "#/definitions/PlayerView"
 
-    MatchView:
-      type: object
-      required:
-        - teamA
-        - teamB
-      properties:
-        court:
-          type: integer
-        teamA:
-          $ref: '#/components/schemas/TeamView'
-        teamB:
-          $ref: '#/components/schemas/TeamView'
+  MatchView:
+    type: object
+    required:
+      - teamA
+      - teamB
+    properties:
+      court:
+        type: integer
+      teamA:
+        $ref: "#/definitions/TeamView"
+      teamB:
+        $ref: "#/definitions/TeamView"
 
-    Interval:
-      type: object
-      required:
-        - date
-        - matches
-      properties:
-        id:
-          type: string
-          format: uuid
-        date:
-          type: string
-          format: date
-        matches:
-          type: array
-          items:
-            $ref: '#/components/schemas/MatchView'
+  Interval:
+    type: object
+    required:
+      - matches
+    properties:
+      id:
+        type: string
+        format: uuid
+      date:
+        type: string
+        format: date
+      matches:
+        type: array
+        items:
+          $ref: "#/definitions/MatchView"
 
-    GamesResponse:
-      type: object
-      description:
-      required:
-        - courts
-        - interval
-        - intervals
-      properties:
-        courts:
-          type: integer
-        intervalType:
-          $ref: '#/components/schemas/MatchInterval'
-        intervals:
-          type: array
-          items:
-            $ref: '#/components/schemas/Interval'
+  GamesResponse:
+    type: object
+    required:
+      - courts
+      - interval
+      - intervals
+    properties:
+      courts:
+        type: integer
+      intervalType:
+        type: string
+      intervals:
+        type: array
+        items:
+          $ref: "#/definitions/Interval"

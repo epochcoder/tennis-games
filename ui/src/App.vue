@@ -25,8 +25,13 @@
                     <input type="text" class="form-control" v-model="courts" id="courts">
                 </div>
                 <div class="form-group">
+                    <label for="courts">Start Date</label>
+                    <datepicker input-class="form-control" v-model="date" name="startDate" format="yyyy-MM-dd"></datepicker>
+                </div>
+                <div class="form-group">
                     <label for="intervalType">Interval Type</label>
                     <select class="form-control" id="intervalType" v-model="intervalType">
+                        <option value="NONE">NONE</option>
                         <option value="WEEKS">WEEKLY</option>
                         <option value="MONTHS">MONTHLY</option>
                     </select>
@@ -76,11 +81,17 @@
 
 <script>
     import GameInterval from './components/GameInterval.vue'
+    import Datepicker from 'vuejs-datepicker';
+    import moment from 'moment';
 
     function getGames() {
         let url = `${process.env.VUE_APP_TENNIS_API}/games?interval=${this.intervalType}&games=${this.games}&courts=${this.courts}`;
         url += `&groupA=${this.groupA.join('&groupA=')}`;
         url += `&groupB=${this.groupB.join('&groupB=')}`;
+        if (this.date) {
+            console.log(this.startDate);
+            url += `&date=${this.startDate}`;
+        }
 
         fetch(url, {'mode': 'cors', 'redirect': 'follow'})
             .then(response => Promise.all([response.ok, response.json()]))
@@ -102,7 +113,7 @@
         name: 'App',
 
         components: {
-            GameInterval
+            GameInterval, Datepicker
         },
 
         data() {
@@ -112,6 +123,7 @@
                 intervalType: 'WEEKS',
                 games: 21,
                 courts: 2,
+                date: '',
 
                 groupA: ['1', '2', '3', '4'],
                 groupB: ['A', 'B', 'C', 'D'],
@@ -125,22 +137,8 @@
                 return this.intervals && this.intervals.length > 0;
             },
 
-            groupAArea: {
-                get: function () {
-                    return this.groupA.join('\n');
-                },
-                set: function (newValue) {
-                    this.groupA = newValue.split('\n');
-                }
-            },
-
-            groupBArea: {
-                get: function () {
-                    return this.groupB.join('\n');
-                },
-                set: function (newValue) {
-                    this.groupB = newValue.split('\n');
-                }
+            startDate: function() {
+                return moment(this.date).format('YYYY-MM-DD')
             }
         },
 

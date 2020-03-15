@@ -7,7 +7,6 @@ import com.epochcoder.games.tennis.domain.Team;
 import com.epochcoder.games.tennis.spec.handler.GamesApi;
 import com.epochcoder.games.tennis.spec.model.GamesResponse;
 import com.epochcoder.games.tennis.spec.model.Interval;
-import com.epochcoder.games.tennis.spec.model.MatchInterval;
 import com.epochcoder.games.tennis.spec.model.TeamView;
 import org.modelmapper.ModelMapper;
 import org.modelmapper.TypeMap;
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Set;
@@ -43,14 +43,15 @@ public class GamesController implements GamesApi {
     @CrossOrigin
     public ResponseEntity<GamesResponse> generateGames(
             @NotNull @Valid final Integer courts,
-            @NotNull @Valid final MatchInterval matchInterval,
-            @NotNull @Valid final List<String> men,
-            @NotNull @Valid final List<String> women,
-            @Valid final Integer games) {
+            @NotNull @Valid final String interval,
+            @NotNull @Valid final List<String> groupA,
+            @NotNull @Valid final List<String> groupB,
+            @Valid final Integer games,
+            @Valid final LocalDate date) {
         final long start = System.currentTimeMillis();
 
-        final List<Player> malePlayers = Player.toPlayers(PlayerGroup.A, men.toArray(new String[0]));
-        final List<Player> femalePlayers = Player.toPlayers(PlayerGroup.B, women.toArray(new String[0]));
+        final List<Player> malePlayers = Player.toPlayers(PlayerGroup.A, groupA.toArray(new String[0]));
+        final List<Player> femalePlayers = Player.toPlayers(PlayerGroup.B, groupB.toArray(new String[0]));
 
         if (malePlayers.size() > MAX_PLAYERS_PER_TEAM || femalePlayers.size() > MAX_PLAYERS_PER_TEAM) {
             return ResponseEntity.badRequest().build();
@@ -58,19 +59,29 @@ public class GamesController implements GamesApi {
 
         final Set<Team> teams = Team.makeTeams(malePlayers, femalePlayers);
         final List<GameDay> allGameDays = GameDay.buildGameDays(
-                ChronoUnit.valueOf(matchInterval.name()), teams, courts);
+                getInterval(interval), date, teams, courts);
         final List<GameDay> gameDays = games == null ? allGameDays
                 : allGameDays.subList(0, Math.min(games, allGameDays.size()));
 
         log.info("Possible to play {}/{} times, took: {}ms",
                 gameDays.size(), allGameDays.size(), (System.currentTimeMillis() - start));
 
-        return ResponseEntity.ok(createResponse(courts, matchInterval, gameDays));
+        return ResponseEntity.ok(createResponse(courts, interval, gameDays));
+    }
+
+    private ChronoUnit getInterval(final String interval) {
+        switch (interval) {
+            case "WEEKS":
+            case "MONTHS":
+                return ChronoUnit.valueOf(interval);
+        }
+
+        return null;
     }
 
     private GamesResponse createResponse(
             final @NotNull @Valid Integer courts,
-            final @NotNull @Valid MatchInterval matchInterval,
+            final @NotNull @Valid String matchInterval,
             final List<GameDay> gameDays) {
         final GamesResponse response = new GamesResponse();
         response.setIntervalType(matchInterval);

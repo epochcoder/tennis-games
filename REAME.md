@@ -20,7 +20,6 @@ Authenticate
     gcloud auth login
     gcloud auth configure-docker
     
-    
 Build & Update
 
     mvn jib:build
@@ -29,13 +28,6 @@ Build & Update
 Config
     
     kubectl apply -f kubernetes.yaml
-    
-Cloud Endpoints
-
-* Generate swagger.json from api.yaml
-* `gcloud endpoints services deploy swagger.json` 
-* Ensure container runtime configured in kubernetes
-
     
 ## Reference gcloud
 
@@ -107,6 +99,10 @@ How to rollout a new version of backend and frontend
 * `mvn clean install`
 * `mvn jib:build`
 * `k rollout restart deployment/tennis-games-service`
+* `k rollout status deployment/tennis-games-service`
+* if API changed:
+
+      gcloud endpoints services deploy api.yaml
 
 ## Firebase
 
@@ -116,11 +112,7 @@ How to rollout a new version of backend and frontend
 
 * Serve local
 
-      cd ui && firebase serve --only hosting
-      
-* Prod deploy
-
-      cd ui && firebase deploy
+      yarn serve
       
 ## References
 
